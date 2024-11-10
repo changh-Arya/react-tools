@@ -19,6 +19,8 @@ code {
   .sideMenu{
     width: 200px;
     overflow-y: auto;
+  border-right: 1px solid #ddd;
+
   }
   .content{
     flex: 1;

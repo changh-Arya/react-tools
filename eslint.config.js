@@ -23,6 +23,10 @@ const config = {
     node: true, // Node.js 环境
     // 'jest': true, // 添加 Jest 环境
   },
+  parserOptions: {
+    "ecmaVersion": 2022,  // 或者更高的版本
+    "sourceType": "module"
+  }
 };
 
 module.exports = config;

@@ -1,0 +1,26 @@
+.sideMenu{
+  width: '200px';
+  background: '#f0f0f0';
+   padding: '20px';
+   ul,li{
+    list-style: none;
+    
+   }
+   li{
+    font-size: 16px;
+    line-height: 28px;
+   
+   }
+
+   .sideMenuChildren{
+    font-size: 14px;
+    line-height: 28px;
+    padding-left: 16px;
+    >div{
+      padding: 0, 10px;
+      &:hover{
+        background-color: beige;
+      }
+    }
+   }
+}
