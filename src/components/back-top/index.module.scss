@@ -1,0 +1,22 @@
+$backtopShadow: 0px 0px 8px 0px #00000040;
+.backTop{
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 50px;
+  height: 50px;
+  background: #282b3e;
+  border-radius: 50% 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: $backtopShadow;
+  cursor: pointer;
+  // @include mobile(){
+  //   bottom: max(16px + var(--ion-safe-area-bottom), 16px);
+  //   right: 16px;
+  // }
+  .backTopIcon{
+    width: 30px;
+  }
+}

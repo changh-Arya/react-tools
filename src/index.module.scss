@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+.main{
+  display: flex;
+  height: 100vh;
+  .sideMenu{
+    width: 200px;
+    overflow-y: auto;
+  }
+  .content{
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+}
