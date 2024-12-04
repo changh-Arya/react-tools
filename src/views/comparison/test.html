@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sticky Header with Horizontal Scroll</title>
+  <style>
+    /* 外部容器 */
+    .scroll-container {
+      width: 100%;
+      /* height: 300px; */
+      /* 容器的高度 */
+      overflow-x: auto;
+      /* 启用水平滚动条 */
+      position: relative;
+      white-space: nowrap;
+      /* 防止换行 */
+    }
+
+    /* 内容区 */
+    .content {
+      display: inline-block;
+      /* 防止换行，保持一行 */
+      min-width: 2000px;
+      /* 设置足够宽的内容 */
+    }
+
+    /* Sticky header 放在内容顶部 */
+    .header-item {
+      position: sticky;
+      top: 0;
+      /* 固定在顶部 */
+      background-color: #ffcc00;
+      padding: 10px;
+      z-index: 10;
+      /* 确保 header 在内容之上 */
+      font-size: 20px;
+      white-space: nowrap;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      /* 确保文字不换行 */
+    }
+
+    /* 内容项 */
+    .item {
+      width: 50vw;
+      text-wrap: wrap;
+      background-color: #e0e0e0;
+      /* margin: 10px; */
+      text-align: center;
+      line-height: 150px;
+      font-size: 18px;
+      display: inline-block;
+      /* 防止换行 */
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="scroll-container" id="scroll-container">
+    <!-- 滚动内容区 -->
+    <div class="content">
+      <!-- Sticky header 放在这里 -->
+      <div class="header-item">
+        Sticky Header
+      </div>
+      <!-- 内容项 -->
+      <div class="item">Item 1</div>
+      <div class="item">Item 2ajksd，阿是大姐开发，撒大姐开发上岛咖啡阿是京东烦恼</div>
+      <div class="item">Item 3</div>
+      <div class="item">Item 4</div>
+      <div class="item">Item 5</div>
+      <div class="item">Item 6</div>
+      <div class="header-item">
+        Sticky Header2
+      </div>
+      <!-- 内容项 -->
+      <div class="item">Item 1</div>
+      <div class="item">Item 2</div>
+      <div class="item">Item 3</div>
+      <div class="item">Item 4</div>
+      <div class="item">Item 5</div>
+      <div class="item">Item 6</div>
+      <div class="item">Item 7</div>
+      <div class="item">Item 8</div>
+      <div class="item">Item 9</div>
+      <div class="item">Item 10</div>
+    </div>
+  </div>
+  <script>
+    const scrollContainer = document.getElementById('scroll-container');
+    let startX = 0;
+    let isTouching = false;
+
+    // 获取屏幕宽度（容器的可视区域宽度）
+    const screenWidth = window.innerWidth
+
+    // 处理触摸开始
+    scrollContainer.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      isTouching = true;
+    });
+
+    // 处理触摸移动
+    scrollContainer.addEventListener('touchmove', (e) => {
+      if (!isTouching) return;
+
+      let moveX = e.touches[0].clientX - startX; // 计算滑动的距离
+
+      // 滚动容器
+      scrollContainer.scrollLeft -= moveX;
+
+      startX = e.touches[0].clientX; // 更新起始位置
+    });
+
+    // 处理触摸结束
+    scrollContainer.addEventListener('touchend', () => {
+      isTouching = false;
+
+      // 获取当前的滚动位置
+      const currentPosition = scrollContainer.scrollLeft;
+
+      // 计算当前滚动位置的屏幕宽度倍数
+      const nearestScreenWidth = Math.round(currentPosition / screenWidth) * screenWidth;
+
+      // 滚动到最近的屏幕宽度位置
+      scrollContainer.scrollTo({
+        left: nearestScreenWidth,
+        behavior: 'smooth'  // 平滑滚动
+      });
+    });
+  </script>
+
+</body>
+
+</html>

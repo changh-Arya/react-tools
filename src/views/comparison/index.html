@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品对比</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+  <div class="table-container">
+    <div class="table-header">
+      <div class="header-item">标题A</div>
+    </div>
+    <div class="scroll-container" id="scroll-container-1">
+      <div class="scroll-content">
+        <div class="item-main">
+          <div class="item">内容A</div>
+          <div class="item">内容B</div>
+        </div>
+        <div class="item-main">
+          <div class="item">内容C</div>
+          <div class="item">内容D</div>
+        </div>
+        <div class="item-main">
+          <div class="item">内容E</div>
+          <div class="item">内容D</div>
+        </div>
+      </div>
+    </div>
+    <div class="table-header">
+      <div class="header-item">标题B</div>
+    </div>
+    <div class="scroll-container" id="scroll-container-2">
+      <div class="scroll-content">
+        <div class="item-main">
+          <div class="item">内容A</div>
+          <div class="item">内容B</div>
+        </div>
+        <div class="item-main">
+          <div class="item">内容C</div>
+          <div class="item">内容D</div>
+        </div>
+        <div class="item-main">
+          <div class="item">内容E</div>
+          <div class="item">内容D</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 获取两个滚动容器
+    const scrollContainer1 = document.getElementById('scroll-container-1');
+    const scrollContainer2 = document.getElementById('scroll-container-2');
+
+    // 定义一个函数来同步滚动
+    function smoothSyncScroll(targetContainer, syncContainer, position) {
+      // 当前滚动位置
+      let currentPosition = syncContainer.scrollLeft;
+
+      // 平滑地计算两个容器之间的滚动变化
+      function step() {
+        // 平滑滚动（通过微小的增量调整滚动位置）
+        currentPosition += (position - currentPosition) * 0.1; // 0.1 是滚动平滑度因子，可以根据需要调整
+
+        syncContainer.scrollLeft = currentPosition;
+
+        // 如果滚动差距较大，继续动画
+        if (Math.abs(position - currentPosition) > 1) {
+          requestAnimationFrame(step);
+        } else {
+          // 当差距小于 1 时，滚动完成
+          syncContainer.scrollLeft = position;  // 确保精确对齐
+        }
+      }
+
+      // 启动平滑滚动
+      requestAnimationFrame(step);
+    }
+
+    // 监听第一个容器的滚动事件
+    scrollContainer1.addEventListener('scroll', function () {
+      // 同步第一个容器的滚动位置到第二个容器
+      const targetPosition = scrollContainer1.scrollLeft;
+      smoothSyncScroll(scrollContainer1, scrollContainer2, targetPosition);
+    });
+
+    // 监听第二个容器的滚动事件（如果需要双向同步）
+    scrollContainer2.addEventListener('scroll', function () {
+      const targetPosition = scrollContainer2.scrollLeft;
+      smoothSyncScroll(scrollContainer2, scrollContainer1, targetPosition);
+    });
+
+
+  </script>
+</body>
+
+</html>

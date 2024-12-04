@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scroll Snap Example</title>
+  <style>
+    /* 滚动容器 */
+    #scroll-container {
+      display: flex;
+      overflow-x: auto;
+      /* 启用水平滚动 */
+      scroll-snap-type: x mandatory;
+      /* 启用水平滚动对齐 */
+      -webkit-overflow-scrolling: touch;
+      /* iOS 平滑滚动 */
+      width: 100vw;
+      /* 设置容器宽度为视口宽度 */
+      height: 100vh;
+      /* 设置容器高度为视口高度 */
+    }
+
+    /* 内容区域 */
+    .content {
+      display: flex;
+      flex-direction: row;
+      /* 水平排列项 */
+      width: fit-content;
+      /* 容纳所有项目的总宽度 */
+    }
+
+    /* 每个内容项 */
+    .item {
+      flex: 0 0 100vw;
+      /* 每个项目宽度为视口宽度 */
+      height: 100vh;
+      /* 高度占满容器 */
+      background-color: #4CAF50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 2rem;
+      scroll-snap-align: start;
+      /* 每个项对齐到容器的起始位置 */
+    }
+
+    /* Sticky Header 样式 */
+    .header-item {
+      position: sticky;
+      top: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      font-size: 1.5rem;
+      text-align: center;
+      z-index: 10;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="scroll-container">
+    <!-- 滚动内容区 -->
+    <div class="content">
+      <!-- Sticky header -->
+      <div class="header-item">
+        Sticky Header 1
+      </div>
+      <!-- 内容项 -->
+      <div class="item">Item 1</div>
+      <div class="item">Item 2: 内容非常长，阿是大姐开发...</div>
+      <div class="item">Item 3</div>
+      <div class="item">Item 4</div>
+      <div class="item">Item 5</div>
+      <div class="item">Item 6</div>
+      <div class="header-item">
+        Sticky Header 2
+      </div>
+      <!-- 内容项 -->
+      <div class="item">Item 7</div>
+      <div class="item">Item 8</div>
+      <div class="item">Item 9</div>
+      <div class="item">Item 10</div>
+    </div>
+  </div>
+
+</body>
+
+</html>

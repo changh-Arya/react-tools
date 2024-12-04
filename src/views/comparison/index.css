@@ -1,0 +1,74 @@
+/* 外部容器 */
+.table-container {
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* 固定标题 */
+.table-header {
+  display: flex;
+  position: sticky;
+  width: 100vw;
+  top: 0;
+  background-color: #fff;
+  z-index: 2;
+  /* 确保标题在内容之上 */
+  border-bottom: 2px solid #ccc;
+}
+
+.header-item {
+  flex-shrink: 0;
+  width: 100%;
+  /* 设置标题的宽度 */
+  padding: 10px;
+  background-color: #f0f0f0;
+  text-align: center;
+  /* border: 1px solid #ccc; */
+}
+
+/* 滚动容器，宽度为一屏 */
+.scroll-container {
+  width: 100%;
+  /* 设置容器的宽度为100% */
+  height: 200px;
+  /* 设置容器的高度为固定值，视实际需求调整 */
+  overflow-x: scroll;
+  /* 允许水平滚动 */
+  overflow-y: hidden;
+  /* 禁止垂直滚动 */
+  scroll-snap-type: x mandatory;
+  /* 启用水平滚动捕捉，强制每次滚动一个项 */
+  display: flex;
+  /* 水平排列子元素 */
+}
+
+/* 内容区域，放置所有的滚动项 */
+.scroll-content {
+  display: flex;
+  /* 将子项横向排列 */
+}
+
+.item-main {
+  width: 100vw;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  display: flex;
+}
+
+/* 每一个滚动项 */
+.item {
+
+  /* 防止子项压缩 */
+  width: 50vw;
+  /* 每个项的宽度设置为100%，即占满一屏 */
+  height: 100%;
+  /* 高度设置为100%，与容器保持一致 */
+  text-align: center;
+  /* 居中显示文本 */
+  line-height: 200px;
+  /* 文本垂直居中（根据容器的高度调整） */
+  background-color: lightgray;
+  border: 1px solid #ccc;
+
+  /* 每个项的起始位置对齐容器的开始位置 */
+}
