@@ -1,5 +1,6 @@
 .scrollContainer{
   width: 100%;
+  background-color: #fafafa;
   overflow: auto;
   position: relative;
   white-space: nowrap;
@@ -14,7 +15,7 @@
     position: sticky;
     /* top: 0; */
     /* 固定在顶部 */
-    background-color: #ffcc00;
+    background-color: #fff;
     padding: 10px 0;
     z-index: 10;
     /* 确保 header 在内容之上 */
@@ -23,44 +24,43 @@
     /* top: 0; */
     left: 0;
     width: 100vw;
+    border-top: 1px solid #ededed;
+    border-bottom: 1px solid #ededed;
     /* 确保文字不换行 */
   }
 
-  /* 内容项 */
-  .item {
-    box-sizing: border-box;
-    border: 1px solid #000;
-    width: 50vw;
-    text-wrap: wrap;
-    background-color: #e0e0e0;
-    text-align: center;
-    line-height: 150px;
-    font-size: 18px;
-    display: inline-flex;
-    /* 防止换行 */
+  .contentLayout{
+    display: grid;
+    grid-auto-flow: column;
+    .item {
+      display: flex;
+      justify-content: center;
+      white-space: normal;
+      width: 50vw;
+      font-size: 20px;
+      line-height: 50px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
   }
 
+
   .headerTop{
-    box-sizing: border-box;
-    border: 1px solid #000;
-    width: 50vw;
-    text-wrap: wrap;
-    background-color: #e0e0e0;
-    text-align: center;
-    line-height: 150px;
-    font-size: 18px;
-    display: inline-flex;
     position: sticky;
     top: 0;
-    /* 固定在顶部 */
-    background-color: #ffcc00;
-    padding: 10px 0;
-    z-index: 10;
-    /* 确保 header 在内容之上 */
-    font-size: 20px;
-    white-space: nowrap;
-    /* top: 0; */
-    /* left: 0; */
+    background-color: #ededed;
     z-index: 9990;
+    display: grid;
+    grid-auto-flow: column;
+    .headerTopItem{
+      display: flex;
+      justify-content: center;
+      white-space: normal;
+      width: 50vw;
+      font-size: 20px;
+      line-height: 50px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
   }
 }
