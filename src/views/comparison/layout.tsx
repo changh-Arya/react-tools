@@ -108,7 +108,7 @@ function App() {
                       List.map((item: any, index) => {
                         return (
                           <div className={styles.item} key={index}>
-                            <ExpandText text={item[ele.key]} maxLines={3} lineHeight={30} />
+                            <ExpandText text={item[ele.key]} maxLines={8} lineHeight={30} />
                           </div>
                         )
                       })
