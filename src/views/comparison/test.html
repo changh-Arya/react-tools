@@ -6,53 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sticky Header with Horizontal Scroll</title>
   <style>
+    body{
+      margin: 0;
+    }
     /* 外部容器 */
     .scroll-container {
       width: 100%;
       /* height: 300px; */
       /* 容器的高度 */
-      overflow-x: auto;
+      overflow: auto;
       /* 启用水平滚动条 */
       position: relative;
       white-space: nowrap;
+      max-height: 100vh;
       /* 防止换行 */
+      touch-action: pan-y; 
     }
 
     /* 内容区 */
     .content {
       display: inline-block;
+      font-size: 0;
       /* 防止换行，保持一行 */
-      min-width: 2000px;
-      /* 设置足够宽的内容 */
     }
 
     /* Sticky header 放在内容顶部 */
     .header-item {
       position: sticky;
-      top: 0;
+      /* top: 0; */
       /* 固定在顶部 */
       background-color: #ffcc00;
-      padding: 10px;
+      padding: 10px 0;
       z-index: 10;
       /* 确保 header 在内容之上 */
       font-size: 20px;
       white-space: nowrap;
-      top: 0;
+      /* top: 0; */
       left: 0;
       width: 100vw;
       /* 确保文字不换行 */
     }
+    .header-item-top{
+      top: 0;
+      z-index: 999;
+    }
 
     /* 内容项 */
     .item {
+      box-sizing: border-box;
+      border: 1px solid #000;
       width: 50vw;
       text-wrap: wrap;
       background-color: #e0e0e0;
-      /* margin: 10px; */
       text-align: center;
       line-height: 150px;
       font-size: 18px;
-      display: inline-block;
+      display: inline-flex;
       /* 防止换行 */
     }
   </style>
@@ -64,12 +73,12 @@
     <!-- 滚动内容区 -->
     <div class="content">
       <!-- Sticky header 放在这里 -->
-      <div class="header-item">
+      <div class="header-item header-item-top">
         Sticky Header
       </div>
       <!-- 内容项 -->
       <div class="item">Item 1</div>
-      <div class="item">Item 2ajksd，阿是大姐开发，撒大姐开发上岛咖啡阿是京东烦恼</div>
+      <div class="item">Item 2ajksd，测试内容多，内容多</div>
       <div class="item">Item 3</div>
       <div class="item">Item 4</div>
       <div class="item">Item 5</div>
@@ -84,10 +93,26 @@
       <div class="item">Item 4</div>
       <div class="item">Item 5</div>
       <div class="item">Item 6</div>
-      <div class="item">Item 7</div>
-      <div class="item">Item 8</div>
-      <div class="item">Item 9</div>
-      <div class="item">Item 10</div>
+      <div class="header-item">
+        Sticky Header3
+      </div>
+      <!-- 内容项 -->
+      <div class="item">Item 1</div>
+      <div class="item">2ajksd，阿是大姐开发，撒大姐开发上岛咖啡阿是京东烦恼 2</div>
+      <div class="item">Item 3</div>
+      <div class="item">Item 4</div>
+      <div class="item">Item 5</div>
+      <div class="item">Item 6</div>
+      <div class="header-item">
+        Sticky Header4
+      </div>
+      <!-- 内容项 -->
+      <div class="item">Item 1</div>
+      <div class="item">Item 2</div>
+      <div class="item">Item 3</div>
+      <div class="item">Item 4</div>
+      <div class="item">Item 5</div>
+      <div class="item">Item 6</div>
     </div>
   </div>
   <script>
@@ -102,6 +127,7 @@
     scrollContainer.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
       isTouching = true;
+      console.log('touchstart:',startX)
     });
 
     // 处理触摸移动
@@ -114,12 +140,14 @@
       scrollContainer.scrollLeft -= moveX;
 
       startX = e.touches[0].clientX; // 更新起始位置
+      console.log('touchmove:',startX)
     });
 
     // 处理触摸结束
-    scrollContainer.addEventListener('touchend', () => {
+    scrollContainer.addEventListener('touchend', (e) => {
       isTouching = false;
-
+      // startX = e.touches[0].clientX;
+      console.log('touchend:',e.touches)
       // 获取当前的滚动位置
       const currentPosition = scrollContainer.scrollLeft;
 
