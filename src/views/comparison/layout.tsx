@@ -1,12 +1,14 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react'
-import styles from './test.module.scss'
-import { data } from './mock'
+import styles from './test2.module.scss'
+import { data, List, TypeList } from './mock'
+import ExpandableText from './components/ExpendText'
 
 function App() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [startX, setStartX] = useState(0)
   const [startY, setStartY] = useState(0)
   const [isTouching, setIsTouching] = useState(false)
+  const [typeList, setTypeList] = useState(TypeList)
 
   const screenWidth = window.innerWidth
 
@@ -75,27 +77,44 @@ function App() {
       }
     }
   }, [isTouching, startX, screenWidth, startY])
+
+  const expendHandle = (index: number) => {
+    const newTypeList = [...typeList]
+    newTypeList[index] = { ...newTypeList[index], expend: !newTypeList[index].expend }
+    setTypeList(newTypeList)
+  }
   return (
     <div className={styles.scrollContainer} ref={scrollContainerRef}>
       <div className={styles.content}>
-        {
-          data.map((item, index) => {
-            return <div className={`${styles.headerTop}`} key={index}>{item.name}</div>
-          })
-        }
+        <div className={styles.headerTop}>
+          {
+            List.map((item, index) => {
+              return <div className={`${styles.headerTopItem}`} key={index}>{item.name}</div>
+            })
+          }
+        </div>
+
         <hr />
         {
-          data[0].list?.map((ele, ind) => {
+          typeList?.map((ele, ind) => {
             return (
               <Fragment key={ind}>
-                <div className={styles.headerItem}>
+                <div className={styles.headerItem} onClick={() => expendHandle(ind)}>
                   {ele.title}
                 </div>
-                {
-                  data.map((item, index) => {
-                    return <div className={styles.item} key={index}>{item.list[ind].desc}</div>
-                  })
-                }
+                {ele.expend && (
+                  <div className={styles.contentLayout}>
+                    {
+                      List.map((item, index) => {
+                        return (
+                          <div className={styles.item} key={index}>
+                            <ExpandableText text={item[ele.key]} maxLines={3} />
+                          </div>
+                        )
+                      })
+                    }
+                  </div>
+                )}
               </Fragment>
             )
           })
