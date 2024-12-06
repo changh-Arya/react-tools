@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react'
-import styles from './index.module.scss'
+import styles from './test.module.scss'
 import { data } from './mock'
 
 function App() {
@@ -74,7 +74,7 @@ function App() {
         scrollContainer.removeEventListener('touchend', handleTouchEnd)
       }
     }
-  }, [isTouching, startX, screenWidth])
+  }, [isTouching, startX, screenWidth, startY])
   return (
     <div className={styles.scrollContainer} ref={scrollContainerRef}>
       <div className={styles.content}>
@@ -83,12 +83,6 @@ function App() {
             return <div className={`${styles.headerTop}`} key={index}>{item.name}</div>
           })
         }
-        <hr />
-        {/* {
-          data.map((item, index) => {
-            return <div className={styles.item} key={index}>{item.data.desc}</div>
-          })
-        } */}
         <hr />
         {
           data[0].list?.map((ele, ind) => {
