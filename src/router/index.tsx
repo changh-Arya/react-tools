@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/layout";
 import BackTopDemo from "../views/back-top/demo";
-import Compare from "../views/comparison";
+import Compare from "../views/comparison/layout";
 import HighlightDemo from "../views/hightlight/demo";
 import { StateShare } from "../views/state-share";
 
@@ -27,12 +27,13 @@ export const routers = createBrowserRouter([
         id: "stateShare",
         element: <StateShare />,
       },
-      {
-        path: "/comparison",
-        id: "comparison",
-        element: <Compare />,
-      }
+
     ]
   },
+  {
+    path: "/comparison",
+    id: "comparison",
+    element: <Compare />,
+  }
 
 ]);

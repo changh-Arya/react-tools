@@ -1,7 +1,7 @@
-import React, { Fragment, useEffect, useRef, useState } from 'react'
-import styles from './test2.module.scss'
-import { data, List, TypeList } from './mock'
-import ExpandableText from './components/ExpendText'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import ExpandText from '../../components/expand-text/ExpandText'
+import styles from './index.module.scss'
+import { List, TypeList } from './mock'
 
 function App() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -105,10 +105,10 @@ function App() {
                 {ele.expend && (
                   <div className={styles.contentLayout}>
                     {
-                      List.map((item, index) => {
+                      List.map((item: any, index) => {
                         return (
                           <div className={styles.item} key={index}>
-                            <ExpandableText text={item[ele.key]} maxLines={3} />
+                            <ExpandText text={item[ele.key]} maxLines={3} lineHeight={30} />
                           </div>
                         )
                       })
