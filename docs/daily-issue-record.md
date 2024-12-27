@@ -1,4 +1,4 @@
-Root and sub-app
+## Root and sub-app
 
 Root可以提供一个事件，触发的时候，sub-app去监听。 前提是提供事件的组件是一个web-component，这个component在子组件使用了。比如，ado-header，上面通过ref监听一个事件
 eg：
@@ -6,7 +6,7 @@ eg：
 1、root -》 app-ado-mobile-header-component
 
   @Output('enterGlobalSearch') enterGlobalSearch = new EventEmitter();
-  // lister for global search
+  // lister for global search    
   private globalListener$: Subscription;
   constructor(
     private globalSearchService: HeaderGlobalSearchService,
