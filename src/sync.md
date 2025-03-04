@@ -12,3 +12,24 @@ URLSearchParams(href)会把+号转为空格。只encode值，不encode key或者
  
 多个路由指向同一个组件，路由切换，组件没有重新渲染问题：  <ado-layout key={location?.pathname}>   const location = useLocation()
  
+
+一个组件内部，路由切换希望能执行，刷新页面不执行
+
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const MyComponent = () => {
+  const location = useLocation();
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+
+  useEffect(() => {
+    if (isFirstLoad) {
+      setIsFirstLoad(false);
+    } else {
+      // 路由切换时执行的操作
+      console.log(`Route changed to ${location.pathname}`);
+    }
+  }, [location.pathname]);
+
+  return <div>Component content for {location.pathname}</div>;
+};
