@@ -1,0 +1,588 @@
+React 深入培训：常用 Hooks 和 Fetch 请求
+
+一、React 中 Fetch 请求的使用与封装
+1. 什么是 Fetch API
+fetch 是一种现代化的浏览器 API，用于执行 HTTP 请求。它返回一个 Promise 对象，因此可以使用 then 或 async/await 语法进行处理。
+特点是：
+- Promise-based：链式调用处理异步操作
+- 默认不带cookie，需要显式设置credentials：'include'
+- http错误不触发reject，需要手动添加reponse.ok
+- 返回数据需要手动response.json()
+
+2. 基本用法
+GET 请求：
+
+fetch('https://api.example.com/data')
+  .then(response => response.json())  // 解析 JSON 响应
+  .then(data => console.log(data))    // 处理数据
+  .catch(error => console.error('请求失败', error)); // 错误处理
+
+POST 请求：
+
+fetch('https://api.example.com/data', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ key: 'value' })  // 请求体数据
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('请求失败', error));
+请求头与请求体
+- 如何设置请求头（Headers）：
+fetch('https://api.example.com/data', {
+  headers: {
+    'Authorization': 'Bearer token',
+    'Content-Type': 'application/json'
+  }
+});
+请求体（Body）：发送 JSON 数据、表单数据等。据等。
+fetch('https://api.example.com/submit', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ name: 'John', age: 30 })
+});
+
+2.6 处理响应
+- 处理响应数据：如何使用 response.json()、response.text() 等方法解析响应数据。
+fetch('https://api.example.com/data')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(data => console.log(data))
+  .catch(error => console.error('There was a problem with your fetch operation:', error));
+2.6 处理错误
+fetch API 的一个特性是，它只会在网络请求失败时（例如无法连接服务器）触发 reject，而 HTTP 错误状态码（例如 404 或 500）不会自动导致 fetch 请求被拒绝。需要手动检查 response.ok 属性来判断请求是否成功。
+- 错误处理的最佳实践：使用catch 处理 Promise 错误。
+- 常见错误场景：网络错误、响应状态码错误等。
+fetch('https://api.example.com/data')
+  .then(response => {
+    if (!response.ok) {
+     // 如果响应的状态码不是 2xx，会抛出一个错误
+      throw new Error('Response failed');
+    }
+    return response.json();
+  })
+  .catch(error => {
+    console.error('Error during fetch operation:', error);
+  });
+
+2.6 跨域请求（CORS）
+- 介绍什么是跨域请求，为什么会遇到跨域问题。
+- 讲解 CORS 策略，如何在请求中设置 mode、credentials等选项。是为了带上cookie信息，如果后端不需要就可以不加，直接header里面传递token也可以。
+- 至于跨域，是由服务端设置Access-Control-Allow-Origin等信息来控制的。
+fetch('https://api.example.com/data', {
+  method: 'GET',
+  credentials: 'same-origin'
+});
+
+
+3. 封装 Fetch 请求
+为了避免重复代码，我们可以将 fetch封装成一个工具函数，统一处理错误和响应。
+
+const fetchData = async (url, options = {}) => {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('请求出错:', error);
+    throw error;
+  }
+};
+
+
+// 使用封装的函数
+fetchData('https://api.example.com/data')
+  .then(data => console.log(data))
+  .catch(error => console.error('错误:', error));
+
+为了封装一个通用的 fetch请求，我们可以创建一个函数，提供以下功能：
+1.支持 Token 认证。
+2.错误处理和 token 过期处理。
+3.支持传入特殊的请求头和响应头。
+4.支持返回blob 类型等特殊数据格式。
+下面是一个封装的示例：
+
+const fetchWithToken = async (url, options = {}) => {
+    const token = localStorage.getItem('token'); // 假设 Token 存储在 localStorage 中
+    if (!token) {
+        throw new Error('No token available.');
+    }
+
+    // 默认请求头
+    const defaultHeaders = {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+    };
+
+    // 合并传入的特殊请求头
+    const headers = {
+        ...defaultHeaders,
+        ...options.headers  // 可以传入额外的请求头
+    };
+
+    // 处理请求选项
+    const fetchOptions = {
+        method: options.method || 'GET',  // 默认 GET 请求
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined  // POST 请求时的请求体
+    };
+
+    try {
+        const response = await fetch(url, fetchOptions);
+
+        // 如果响应状态码不是200，抛出错误
+        if (!response.ok) {
+            // 处理 Token 过期的情况（假设返回401时 Token 过期）
+            if (response.status === 401) {
+                // 在这里处理 Token 过期的情况，比如重定向到登录页面或刷新 Token
+                throw new Error('Token expired. Please log in again.');
+            }
+            throw new Error(`Request failed with status: ${response.status}`);
+        }
+
+        // 处理不同类型的响应数据
+        const contentType = response.headers.get('Content-Type');
+
+        // 如果返回的是 JSON
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        }
+
+        // 如果返回的是 Blob 类型（如图片、文件等）
+        if (contentType && contentType.includes('application/octet-stream')) {
+            return await response.blob();
+        }
+
+        // 默认返回文本
+        return await response.text();
+    } catch (error) {
+        console.error('请求失败:', error);
+        throw error;  // 将错误抛出，方便调用者处理
+    }
+};
+
+// 使用示例：
+const fetchData = async () => {
+    try {
+        const data = await fetchWithToken('https://api.example.com/data', {
+            method: 'GET',  // 可以根据需要修改请求方法
+            headers: {
+                'Custom-Header': 'custom-value'  // 可以传入特殊的请求头
+            }
+        });
+        console.log(data);
+    } catch (error) {
+        console.error('请求出错:', error);
+    }
+};
+
+fetchData();
+
+主要功能：
+1.Token 认证：
+- 使用 localStorage.getItem('token')获取 Token，确保请求包含认证信息。
+2.错误处理：
+- 如果响应状态不是 200（即请求失败），则抛出错误。
+- 处理 Token 过期的情况，假设服务器返回 401 状态码时 Token 过期。
+3.支持特殊请求头：
+- 通过options.headers参数传入自定义的请求头，支持扩展。
+4.支持不同类型的响应数据：
+- 根据响应的 Content-Type判断返回的是 JSON、Blob 还是文本，适配不同数据格式。
+- 如果返回的是 Blob（比如文件或图片），会直接返回 Blob 对象。
+说明：
+- Token 存储：在这个示例中，假设 Token 存储在 localStorage 中，你可以根据自己的需求更改存储方式（比如使用 sessionStorage 或者 Cookie）。
+- 错误处理：我们根据响应的状态码判断是否需要抛出错误，401 状态码表示 Token 过期，你可以在 if (response.status === 401)处增加 Token 刷新的逻辑。
+- 返回格式：该封装支持根据Content-Type自动处理不同的返回格式，包括 JSON、文本和 Blob 类型。
+
+
+4. 处理 CORS（跨域问题）
+跨域问题是前端开发中常见的一个问题。可以通过设置代理、后台处理 CORS 或在请求中添加必要的 headers 来解决。
+--------------------------------------------------------------------------------
+二、React 常用 Hooks
+1. useState（状态管理）
+useState 是最常用的 hook，它用于在函数组件中添加状态。通过 useState，我们可以创建和更新状态。
+基本用法：
+
+const [count, setCount] = useState(0);  // 创建一个名为 count 的状态变量
+
+const handleIncrement = () => {
+  setCount(count + 1);  // 更新状态
+};
+
+return <button onClick={handleIncrement}>Count: {count}</button>;
+
+使用对象作为状态：
+
+const [state, setState] = useState({ count: 0, name: 'Alice' });
+
+const handleNameChange = (newName) => {
+  setState((prevState) => ({ ...prevState, name: newName }));
+};
+
+return <div>Name: {state.name}</div>;
+
+--------------------------------------------------------------------------------
+2. useEffect（副作用处理）
+useEffect 用来处理副作用，类似于类组件中的生命周期方法。常用于数据请求、订阅、DOM 操作等。
+基本用法：
+javascriptCopy Code
+useEffect(() => {
+  fetchData('https://api.example.com/data')
+    .then(data => console.log(data))
+    .catch(error => console.error('请求失败', error));
+}, []); // 空数组意味着仅在组件挂载时调用
+
+带清理函数的 useEffect：
+javascriptCopy Code
+useEffect(() => {
+  const timer = setInterval(() => console.log('定时器运行中...'), 1000);
+  
+  return () => clearInterval(timer);  // 清理定时器
+}, []);  // 仅在组件挂载时创建定时器
+
+依赖项数组：
+当依赖项数组中的变量发生变化时，useEffect 会重新运行。
+javascriptCopy Code
+useEffect(() => {
+  console.log('count 改变了：', count);
+}, [count]);  // 当 count 变化时调用 useEffect
+
+注意： 防止循环渲染
+。最常见的情况是  useEffect 中依赖了某个状态或属性，且状态更新的过程又触发了 状态更新
+import React, { useState, useEffect } from 'react';
+
+function Example() {
+  const [count, setCount] = useState(0);
+
+  // 这个 useEffect 会导致无限循环渲染
+  useEffect(() => {
+    setCount(count + 1); // 每次更新 count 时都会触发 useEffect
+  }, [count]);  // count 是依赖项，所以每次 count 更新时都会触发该 effect
+
+  return <div>{count}</div>;
+}
+
+export default Example;
+
+--------------------------------------------------------------------------------
+3. useContext（上下文）
+useContext 用于在组件树中共享数据，避免多层级的 props 传递。
+创建上下文并使用：
+javascriptCopy Code
+const UserContext = createContext();
+
+const Parent = () => {
+  const user = { name: 'Alice', age: 25 };
+  return (
+    <UserContext.Provider value={user}>
+      <Child />
+    </UserContext.Provider>
+  );
+};
+
+const Child = () => {
+  const user = useContext(UserContext);
+  return <div>用户名：{user.name}</div>;
+};
+
+--------------------------------------------------------------------------------
+4. useRef（访问 DOM 和保存可变数据）
+useRef 用来访问 DOM 元素或保存跨渲染周期不变的值。
+（1）访问 DOM 元素：
+javascriptCopy Code
+const inputRef = useRef(null);
+
+const handleFocus = () => {
+  inputRef.current.focus();  // 聚焦输入框
+};
+
+return (
+  <div>
+    <input ref={inputRef} type="text" />
+    <button onClick={handleFocus}>聚焦输入框</button>
+  </div>
+);
+
+（2）保存可变数据：
+useRef 也可以用来保存跨渲染周期的可变数据（比如定时器ID）。
+javascriptCopy Code
+const timerId = useRef(null);
+
+useEffect(() => {
+  timerId.current = setInterval(() => console.log('定时器运行中...'), 1000);
+  return () => clearInterval(timerId.current);  // 清理定时器
+}, []);
+
+（3）存储上一次的值
+useRef 可以用来保存上一次的值，通常在比较当前值与上一个值时非常有用，常见于防抖、节流等场景。
+常见示例：比较当前值与上一个值
+
+import React, { useState, useEffect, useRef } from 'react';
+
+const PreviousValue = () => {
+  const [count, setCount] = useState(0);
+  const prevCountRef = useRef();
+
+  // 在每次渲染后更新 ref 存储的值
+  useEffect(() => {
+    prevCountRef.current = count;
+  }, [count]);
+
+  const prevCount = prevCountRef.current;
+
+  return (
+    <div>
+      <p>Current Count: {count}</p>
+      <p>Previous Count: {prevCount}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+};
+
+export default PreviousValue;
+（4） 保持引用对象的稳定性
+useRef可以保持函数或对象的引用稳定，即使组件重新渲染也不会改变。这在避免不必要的重新渲染时非常有用。
+常见示例：存储稳定的回调函数
+javascriptCopy Code
+import React, { useState, useRef, useEffect } from 'react';
+
+const TimerComponent = () => {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(count);
+
+  // 使用 ref 保持 count 的稳定引用
+  useEffect(() => {
+    countRef.current = count;
+  }, [count]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      console.log(countRef.current);  // 每秒钟打印稳定的 count 值
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return (
+    <div>
+      <p>Current Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+};
+
+export default TimerComponent;
+
+--------------------------------------------------------------------------------
+5. useMemo 和 useCallback（性能优化）
+- useMemo 用于缓存计算结果，避免每次渲染时都进行重新计算。
+- useCallback 用于缓存函数，避免函数在每次渲染时都重新创建。
+useMemo：
+javascriptCopy Code
+const memoizedValue = useMemo(() => expensiveCalculation(count), [count]);
+
+// 只有 count 变化时，才会重新计算 expensiveCalculation
+useCallback：
+javascriptCopy Code
+const memoizedCallback = useCallback(() => { console.log(count); }, [count]);
+
+// 只有 count 变化时，才会返回新的函数
+
+
+
+memo 允许你的组件在 props 没有改变的情况下跳过重新渲染。
+example 来自react官方 memo的使用
+import { memo, useState } from 'react';
+
+export default function MyApp() {
+  const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
+  return (
+    <>
+      <label>
+        Name{': '}
+        <input value={name} onChange={e => setName(e.target.value)} />
+      </label>
+      <label>
+        Address{': '}
+        <input value={address} onChange={e => setAddress(e.target.value)} />
+      </label>
+      <Greeting name={name} />
+    </>
+  );
+}
+
+const Greeting = memo(function Greeting({ name }) {
+  console.log("Greeting was rendered at", new Date().toLocaleTimeString());
+  return <h3>Hello{name && ', '}{name}!</h3>;
+});
+
+
+
+
+--------------------------------------------------------------------------------
+6. useReducer（复杂状态管理）
+useReducer 是 useState 的一种替代方案，适用于复杂状态管理，尤其是涉及多个子状态或复杂逻辑时。
+
+const initialState = { count: 0 };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+}
+
+const [state, dispatch] = useReducer(reducer, initialState);
+
+return (
+  <div>
+    <p>Count: {state.count}</p>
+    <button onClick={() => dispatch({ type: 'increment' })}>+1</button>
+    <button onClick={() => dispatch({ type: 'decrement' })}>-1</button>
+  </div>
+);
+
+--------------------------------------------------------------------------------
+7.useImperativeHandle
+1、核心功能
+Hook组合作用forwardRef允许函数式组件接收父组件传递的ref对象，实现跨组件DOM/方法访问14useImperativeHandle自定义暴露给父组件的实例值，控制子组件对外暴露的操作方法23
+
+二、实现步骤（代码示例）
+1. 定义子组件（暴露特定方法）
+jsxCopy Code
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+
+const ChildComponent = forwardRef((props, ref) => {
+  const inputRef = useRef();
+  
+  // 暴露聚焦方法和输入值获取
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current.focus(),
+    getValue: () => inputRef.current.value
+  }));
+
+  return <input ref={inputRef} />;
+});
+
+2. 父组件调用子组件方法
+jsxCopy Code
+function ParentComponent() {
+  const childRef = useRef();
+
+  const handleClick = () => {
+    childRef.current.focus(); // 调用子组件暴露的方法
+    console.log(childRef.current.getValue());
+  };
+
+  return (
+    <>
+      <ChildComponent ref={childRef} />
+      <button onClick={handleClick}>操作子组件</button>
+    </>
+  );
+}
+
+--------------------------------------------------------------------------------
+三、典型使用场景
+场景应用模式表单组件方法封装对外暴露validate()/reset()方法，代替直接操作DOM35动画控制父组件触发子组件动画播放接口（如play()/pause()）5第三方库集成封装复杂组件时提供标准化操作接口27
+--------------------------------------------------------------------------------
+四、最佳实践与注意事项
+1.‌TypeScript类型定义‌
+为暴露的方法添加类型约束：
+tsxCopy Code
+interface ExposedMethods {
+  focus: () => void;
+  getValue: () => string;
+}
+
+const ChildComponent = forwardRef<ExposedMethods>((props, ref) => { ... });
+
+2.‌避免过度暴露‌
+仅暴露必要方法，保持组件封装性45。例如，表单组件不需要暴露<input>的style属性
+3.‌性能优化‌
+当依赖项变化时，通过第三个参数更新暴露方法：
+jsxCopy Code
+useImperativeHandle(ref, () => ({ ... }), [dependency]); // 依赖变化时重新生成方法:ml-citation{ref="3,4" data="citationList"}
+
+4.‌错误处理‌
+父组件调用前需检查方法是否存在：
+jsxCopy Code
+if (childRef.current?.validate) {
+  childRef.current.validate();
+}
+
+8
+
+
+--------------------------------------------------------------------------------
+
+
+三、常见 Hooks 组合使用场景
+场景 1：数据请求与状态管理
+javascriptCopy Code
+const [data, setData] = useState(null);
+const [loading, setLoading] = useState(false);
+
+useEffect(() => {
+  setLoading(true);
+  fetchData('https://api.example.com/data')
+    .then((response) => {
+      setData(response);
+      setLoading(false);
+    })
+    .catch((error) => {
+      console.error('请求失败', error);
+      setLoading(false);
+    });
+}, []);  // 初次加载时发起请求
+
+return loading ? <div>加载中...</div> : <div>数据: {JSON.stringify(data)}</div>;
+
+场景 2：表单处理
+javascriptCopy Code
+const [formData, setFormData] = useState({ name: '', email: '' });
+
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setFormData((prevState) => ({ ...prevState, [name]: value }));
+};
+
+return (
+  <form>
+    <input
+      type="text"
+      name="name"
+      value={formData.name}
+      onChange={handleInputChange}
+    />
+    <input
+      type="email"
+      name="email"
+      value={formData.email}
+      onChange={handleInputChange}
+    />
+    <button type="submit">提交</button>
+  </form>
+);
+
+--------------------------------------------------------------------------------
+四、总结与最佳实践
+- 避免不必要的渲染：合理使用 useMemo 和 useCallback，尤其是在性能要求较高的组件中。
+- 副作用管理：使用 useEffect 处理副作用，确保在组件挂载时执行，并在卸载时清理资源。
+- 数据请求与状态管理：通过组合 useState 和 useEffect 来管理数据请求的状态和显示逻辑。
+--------------------------------------------------------------------------------
