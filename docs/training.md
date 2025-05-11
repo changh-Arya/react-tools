@@ -28,38 +28,67 @@ Hooks 主要是为了让开发者能够在函数式组件中：
 示例：
 基本用法
 
-const [count, setCount] = useState(0);  // 创建一个名为 count 的状态变量
+import { useState } from 'react'
+// 基本数据类型
+export default function Counter() {
+  const [count, setCount] = useState(0)
+  const [show, setShow] = useState(false)
+  function handleClick() {
+    setCount(count + 1)
+    setShow(!show)
+  }
 
-const handleIncrement = () => {
-  setCount(count + 1);  // 更新状态
-};
-
-return <button onClick={handleIncrement}>Count: {count}</button>;
-复杂类型状态管理
-
-import React, { useState } from 'react';
-
-function TodoList() {
-  const [tasks, setTasks] = useState([]); // 初始化任务列表
-
-  const addTask = (task) => {
-    setTasks([...tasks, task]); // 添加新任务
-  };
+  // eslint-disable-next-line no-console
+  console.info('render', count, show)
 
   return (
     <div>
+      <button type="button" onClick={handleClick}>
+        You pressed me
+        {count}
+        times
+      </button>
+    </div>
+  )
+}
+
+复杂类型状态管理
+
+import { useState } from 'react'
+import type { IItem } from './type'
+import Counter from './Counter'
+import styles from './index.module.scss'
+
+function TodoList() {
+  const [tasks, setTasks] = useState<IItem[]>([]) // 初始化任务列表
+
+  const addTask = (taskName: string) => {
+    setTasks([...tasks, { id: Math.floor(Math.random() * 100), title: taskName, completed: false }]) // 添加新任务
+  }
+  // eslint-disable-next-line no-console
+  console.info(tasks)
+
+  return (
+    <div>
+      <Counter />
+      <br />
       <h2>Todo List</h2>
-      <button onClick={() => addTask('新任务')}>添加任务</button>
+      <button type="button" onClick={() => addTask('新任务')}>添加任务</button>
       <ul>
         {tasks.map((task, index) => (
-          <li key={index}>{task}</li>
+          <li key={index} className={task.completed ? styles.completed : ''}>
+            {task.id}
+            :
+            {task.title}
+          </li>
         ))}
       </ul>
     </div>
-  );
+  )
 }
 
-export default TodoList;
+export default TodoList
+
 
 说明：使用 useState 来管理 tasks（任务列表）的状态，点击按钮时会向列表中添加一个新任务。
 --------------------------------------------------------------------------------
@@ -69,42 +98,61 @@ export default TodoList;
 - 接收两个参数，第一个是副作用函数，第二个参数是依赖项。
 示例：
 jsCopy Code
-import React, { useState } from 'react';
-
 function TodoList() {
-  const [tasks, setTasks] = useState([]); // 初始化任务列表
+  const [tasks, setTasks] = useState<IItem[]>([]) // 初始化任务列表
 
-  const addTask = (task) => {
-    setTasks([...tasks, task]); // 添加新任务
-  };
-  
+  const addTask = (taskName: string) => {
+    setTasks([...tasks, { id: Math.floor(Math.random() * 100), title: taskName, completed: false }]) // 添加新任务
+  }
+  // eslint-disable-next-line no-console
+  console.info(tasks)
+
   useEffect(() => {
     // 模拟从服务器加载任务数据
-    const initialTasks = ['任务1', '任务2', '任务3'];
-    setTasks(initialTasks);
-    return ()=>{
-        console.log(component unmount)  // 可以用于清除定时器等  
+    const initialTasks: IItem[] = [
+      {
+        id: 1,
+        title: 'task 1',
+        completed: false
+      },
+      {
+        id: 2,
+        title: 'task 2',
+        completed: true
+      }
+    ]
+    setTasks(initialTasks)
+    return () => {
+      // eslint-disable-next-line no-console
+      console.log('component unmount') // 可以用于清除定时器等
     }
-  }, []); // 空数组表示仅在组件挂载时执行一次
-  
+  }, []) // 空数组表示仅在组件挂载时执行一次
+
   useEffect(() => {
-    console.info(task.length)
-  }, [tasks.length]); 
+    // eslint-disable-next-line no-console
+    console.info(tasks.length)
+  }, [tasks.length])
 
   return (
     <div>
+      <Counter />
+      <br />
       <h2>Todo List</h2>
-      <button onClick={() => addTask('新任务')}>添加任务</button>
+      <button type="button" onClick={() => addTask('新任务')}>添加任务</button>
       <ul>
         {tasks.map((task, index) => (
-          <li key={index}>{task}</li>
+          <li key={index} className={task.completed ? styles.completed : ''}>
+            {task.id}
+            :
+            {task.title}
+          </li>
         ))}
       </ul>
     </div>
-  );
+  )
 }
 
-export default TodoList;
+export default TodoList
 说明：useEffect 模拟从服务器加载数据，确保任务数据在组件首次渲染时加载。
 --------------------------------------------------------------------------------
 3. useContext：共享全局状态
@@ -131,26 +179,26 @@ function Root() {
 
 export default Root;
 
-import React, { useContext } from 'react';
-import { ThemeContext } from './Root'; // 引入ThemeContext
-
 function ThemeSwitcher() {
-  const { theme, setTheme } = useContext(ThemeContext); // 获取主题和设置主题的方法
+  const { theme, setTheme } = useContext(ThemeContext) // 获取主题和设置主题的方法
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
+    setTheme((prevTheme:string) => (prevTheme === 'light' ? 'dark' : 'light'))
+  }
 
   return (
     <div>
-      <button onClick={toggleTheme}>
-        Switch to {theme === 'light' ? 'Dark' : 'Light'} Theme
+      <button type="button" onClick={toggleTheme}>
+        Switch to
+        {theme === 'light' ? 'Dark' : 'Light'}
+        Theme
       </button>
     </div>
-  );
+  )
 }
 
-export default ThemeSwitcher;
+export default ThemeSwitcher
+
 
 
 
@@ -183,12 +231,16 @@ import React, { useState, useRef, useEffect } from 'react';
 
 function TodoList() {
   const [tasks, setTasks] = useState([]);
-  const inputRef = useRef(); // 用于获取输入框的引用
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const addTask = () => {
-    setTasks([...tasks, inputRef.current.value]);
-    inputRef.current.value = ''; // 清空输入框
-  };
+    if (!inputRef?.current?.value) {
+      return
+    }
+    setTasks([...tasks, { id: Math.floor(Math.random() * 100), title: inputRef?.current?.value, completed: false }]) // 添加新任务
+
+    inputRef.current.value = ''
+  }
 
   return (
     <div>
@@ -360,52 +412,64 @@ export default TodoList;
 示例：
 import React, { useState, useEffect, useReducer } from 'react';
 
-const taskReducer = (state, action) => {
+type Action =
+  | { type: 'ADD_TASK', payload: IItem }
+  | { type: 'COMPLETE_TASK', payload: IItem }
+
+// Reducer 函数
+function taskReducer(state: IItem[], action: Action): IItem[] {
   switch (action.type) {
     case 'ADD_TASK':
-      return [...state, action.payload];
-    case 'REMOVE_TASK':
-      return state.filter((task) => task !== action.payload);
-    default:
-      return state;
-  }
-};
+      return [...state, action.payload]
+    case 'COMPLETE_TASK':
+      return state.map(task =>
+        task.id === action.payload.id
+          ? { ...task, completed: !task.completed }
+          : task
+      )
 
-function TodoList() {
-  const [tasks, dispatch] = useReducer(taskReducer, []);
-  const [newTask, setNewTask] = useState('');
+    default:
+      return state
+  }
+}
+
+function TodoListReducer() {
+  const [tasks, dispatch] = useReducer(taskReducer, [])
+
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const addTask = () => {
-    dispatch({ type: 'ADD_TASK', payload: newTask });
-    setNewTask('');
-  };
+    if (!inputRef?.current?.value) {
+      return
+    }
+    const newTask = { id: Math.floor(Math.random() * 100), title: inputRef?.current?.value, completed: false }
+    dispatch({ type: 'ADD_TASK', payload: newTask })
+    inputRef.current.value = ''
+  }
 
-  const removeTask = (task) => {
-    dispatch({ type: 'REMOVE_TASK', payload: task });
-  };
+  const toggleCompletion = (task: IItem) => {
+    dispatch({ type: 'COMPLETE_TASK', payload: task })
+  }
 
   return (
     <div>
-      <h2>Todo List</h2>
-      <input
-        type="text"
-        value={newTask}
-        onChange={(e) => setNewTask(e.target.value)}
-        placeholder="输入新任务"
-      />
-      <button onClick={addTask}>添加任务</button>
+      <h2>Todo List (reducer)</h2>
+      <input ref={inputRef} type="text" placeholder="输入新任务" />
+      <button type="button" onClick={() => addTask()}>添加任务</button>
       <ul>
         {tasks.map((task, index) => (
-          <li key={index}>
-            {task} <button onClick={() => removeTask(task)}>删除</button>
+          <li key={index} className={task.completed ? styles.completed : ''} onClick={() => toggleCompletion(task)}>
+            {task.id}
+            :
+            {task.title}
           </li>
         ))}
       </ul>
     </div>
-  );
+  )
 }
 
-export default TodoList;
+export default TodoListReducer
 
 说明：使用 useReducer 来处理任务的添加和删除操作，通过 dispatch 触发 action。
 
@@ -484,75 +548,53 @@ fetch('https://api.example.com/data')
 fetch应用项目中的例子
 import React, { useState, useEffect } from 'react';
 
-const TodoList = () => {
-  const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState("");
+function TodoListFetch() {
+  const [tasks, dispatch] = useReducer(taskReducer, [])
 
   // 获取任务列表
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/todos')  // 假设这是你的 API 地址
+    fetch('https://jsonplaceholder.typicode.com/todos?_limit=10') // 假设这是你的 API 地址
       .then(response => response.json())
-      .then(data => setTodos(data))
-      .catch(error => console.error('Error fetching todos:', error));
-  }, []);  // 依赖数组为空，意味着组件首次渲染时获取数据
-
-  // 添加任务
-  const addTodo = () => {
-    if (newTodo.trim() === "") return;
-
-    fetch('https://jsonplaceholder.typicode.com/todos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: newTodo,
-        completed: false
-      }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        setTodos([...todos, data]);
-        setNewTodo("");  // 清空输入框
+      .then((data) => {
+        dispatch({ type: 'SET_TASKS', payload: data })
       })
-      .catch(error => console.error('Error adding todo:', error));
-  };
+      .catch(error => console.error('Error fetching todos:', error))
+  }, []) // 依赖数组为空，意味着组件首次渲染时获取数据
 
-  // 删除任务
-  const deleteTodo = (id) => {
-    fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
-      method: 'DELETE',
-    })
-      .then(() => {
-        setTodos(todos.filter(todo => todo.id !== id));
-      })
-      .catch(error => console.error('Error deleting todo:', error));
-  };
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const addTask = () => {
+    if (!inputRef?.current?.value) {
+      return
+    }
+    const newTask = { id: Math.floor(Math.random() * 100), title: inputRef?.current?.value, completed: false }
+    dispatch({ type: 'ADD_TASK', payload: newTask })
+    inputRef.current.value = ''
+  }
+
+  const toggleCompletion = (task: IItem) => {
+    dispatch({ type: 'COMPLETE_TASK', payload: task })
+  }
 
   return (
     <div>
-      <h1>Todo List</h1>
-      <input 
-        type="text" 
-        value={newTodo} 
-        onChange={(e) => setNewTodo(e.target.value)} 
-        placeholder="New task"
-      />
-      <button onClick={addTodo}>Add Todo</button>
-
+      <h2>Todo List (reducer)</h2>
+      <input ref={inputRef} type="text" placeholder="输入新任务" />
+      <button type="button" onClick={() => addTask()}>添加任务</button>
       <ul>
-        {todos.map(todo => (
-          <li key={todo.id}>
-            <span>{todo.title}</span>
-            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+        {tasks.map((task, index) => (
+          <li key={index} className={task.completed ? styles.completed : ''} onClick={() => toggleCompletion(task)}>
+            {task.id}
+            :
+            {task.title}
           </li>
         ))}
       </ul>
     </div>
-  );
-};
+  )
+}
 
-export default TodoList;
+export default TodoListFetch
 
 当然，在真正的项目中，为了避免重复代码，我们可以将 fetch封装成一个工具函数，统一处理请求头、错误和响应。
 基本示例：
