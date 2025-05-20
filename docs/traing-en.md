@@ -1,102 +1,109 @@
-React Hooks Deep Dive: Building a Todo List App
+Build a Todo List App using React's commonly used hooks and the Fetch API
+
 Introduction
-Since modern React development primarily uses function components, it's important to understand how they differ from regular JavaScript functions.
+
+In this course, we’ll be using function components exclusively. Before diving into Hooks, let’s clarify how function components differ from regular JavaScript functions.
 
 Function Components vs. Regular Functions
+
 Feature
 
 Function Component
 
-Regular JS Function
+Regular Function
 
 Return Value
 
-Returns JSX (UI elements)
+Returns JSX (UI)
 
 Returns primitive values or objects
 
 Lifecycle
 
-Can use lifecycle-like behavior via Hooks
+Can use lifecycle logic via Hooks
 
 No lifecycle awareness
 
-State Management
+State
 
-Uses useState and other Hooks
+Can manage state with useState and others
 
 No built-in state
 
 Props & Context
 
-Receives props and can access context
+Receives props and can consume context
 
-Only receives arguments
+Accepts arguments only
 
-In short, function components are purpose-built for UI rendering in React and come with special capabilities via Hooks.
+In short, function components are designed for rendering UI in React, while regular functions are general-purpose.
 
 Why Hooks?
-Hooks were introduced to bring powerful features to function components, enabling:
 
-State management with useState
+Hooks unlock powerful features in function components:
 
-Side effects handling with useEffect
+Stateful logic with useState
+
+Side effects with useEffect
 
 Context access with useContext
 
-Logic reuse via custom Hooks
+Reusable logic via custom hooks
 
-Hooks make function components more expressive, modular, and easier to test.
-
-Course Goals
-By the end of this course, you will:
-
-Understand and apply essential React Hooks: useState, useEffect, useContext, useReducer, useRef, useMemo, useCallback, and memo
-
-Learn how these Hooks interconnect through hands-on examples
-
-Use the native fetch API to call backend services and render data
-
-Build a fully functional Todo List application using Hooks
-
-1. useState: Managing Local Component State
-Overview
-useState is the most fundamental Hook. It allows you to add state to function components.
+Hooks make function components more expressive, modular, and easier to test—without needing class components.
 
 
+
+Course Objectives
+
+By the end of this course, you’ll be able to:
+
+Use essential React Hooks: useState, useEffect, useContext, useReducer, useRef, useMemo, useCallback, and memo
+
+Understand how these hooks work together through real-world examples
+
+Use the native fetch API to call backend endpoints and render the response
+
+Build a complete Todo List app using Hooks
+
+1. useState: Managing Local State
+
+What It Does
+
+useState lets you add state to function components. It returns a pair: the current state and a function to update it.
 
 const [state, setState] = useState(initialValue)
+
 It returns a pair: the current state value and a function to update it.
 
-Basic Example: Counter
+Basic Example
 
-
-import { useState } from 'react'
 export default function Counter() {
   const [count, setCount] = useState(0)
   const [show, setShow] = useState(false)
+
   function handleClick() {
     setCount(count + 1)
     setShow(!show)
   }
+
   console.info('render', count, show)
+
   return (
     <div>
-      <button onClick={handleClick}>
+      <button type="button" onClick={handleClick}>
         You pressed me {count} times
       </button>
     </div>
   )
 }
-Managing Complex State: Todo List
 
 
-import { useState } from 'react'
-import type { IItem } from './type'
-import Counter from './Counter'
-import styles from './index.module.scss'
+Managing Complex State (e.g. Arrays)
+
 function TodoList() {
   const [tasks, setTasks] = useState<IItem[]>([])
+
   const addTask = (taskName: string) => {
     setTasks([
       ...tasks,
@@ -108,10 +115,10 @@ function TodoList() {
     <div>
       <Counter />
       <h2>Todo List</h2>
-      <button onClick={() => addTask('New Task')}>Add Task</button>
+      <button type="button" onClick={() => addTask('New Task')}>Add Task</button>
       <ul>
         {tasks.map((task, index) => (
-          <li key={index} className={task.completed ? styles.completed : ''}>
+          <li key={index}>
             {task.id}: {task.title}
           </li>
         ))}
@@ -119,14 +126,16 @@ function TodoList() {
     </div>
   )
 }
+
 export default TodoList
-✅ useState is used here to manage an array of task objects. Clicking the button adds a new task to the list.
+
+✅ useState is used here to manage a list of tasks. Clicking the button adds a new task to the list.
 
 2. useEffect: Handling Side Effects
+
 Overview
-useEffect lets you perform side effects in function components — such as data fetching, subscriptions, or manually changing the DOM.
 
-
+useEffect lets you perform side effects in function components—like data fetching, subscriptions, or manually updating the DOM.
 
 useEffect(() => {
   // side effect logic
@@ -135,38 +144,49 @@ useEffect(() => {
   }
 }, [dependencies])
 
+Example: 
 
-import { useEffect, useState } from 'react'
+Simulating Data Fetching
+
+lifecycle
+
+subscriptions
+
+// Simulate fetching data from a server
+const initialTasks: IItem[] = [
+  { id: 1, title: 'task 1', completed: false },
+  { id: 2, title: 'task 2', completed: true }
+]
+
 function TodoList() {
   const [tasks, setTasks] = useState<IItem[]>([])
+
   const addTask = (taskName: string) => {
     setTasks([
       ...tasks,
       { id: Math.floor(Math.random() * 100), title: taskName, completed: false }
     ])
   }
+
   useEffect(() => {
-    // Simulate fetching data from a server
-    const initialTasks: IItem[] = [
-      { id: 1, title: 'task 1', completed: false },
-      { id: 2, title: 'task 2', completed: true }
-    ]
     setTasks(initialTasks)
+    console.log('component mounted')
     return () => {
-      console.log('component unmounted')
+      console.log('component unmount')
     }
-  }, []) // Runs only once on mount
+  }, []) // Run only once on mount
+
   useEffect(() => {
-    console.info(`Task count: ${tasks.length}`)
-  }, [tasks.length]) // Runs when task count changes
+    console.info(tasks.length)
+  }, [tasks.length]) // Run when task count changes
+
   return (
     <div>
-      <Counter />
       <h2>Todo List</h2>
-      <button onClick={() => addTask('New Task')}>Add Task</button>
+      <button type="button" onClick={() => addTask('New Task')}>Add Task</button>
       <ul>
         {tasks.map((task, index) => (
-          <li key={index} className={task.completed ? styles.completed : ''}>
+          <li key={index}>
             {task.id}: {task.title}
           </li>
         ))}
@@ -175,125 +195,114 @@ function TodoList() {
   )
 }
 export default TodoList
-Example: Load Initial Tasks
-✅ useEffect is used to simulate fetching initial data and to log changes in task count.
 
- 
+✅ useEffect is used here to simulate loading initial data when the component mounts, and to log the number of tasks whenever it changes.
 
 3. useContext: Sharing Global State
+
+Goal
+
+Use useContext to manage global state—such as toggling the theme of the Todo List UI—without prop drilling.
+
 Overview
-useContext allows you to share state across components without having to pass props manually at every level. It works together with React.createContext() and a Context.Provider to create a global state that can be accessed by any component in the tree.
 
-This is especially useful for managing themes, user authentication, or any other global settings.
+useContext allows you to access context values directly in any component, avoiding the need to pass props through multiple layers.
 
-Syntax
+To use it:
 
+Create a context with createContext()
 
-const MyContext = createContext(defaultValue);
-function App() {
-  return (
-    <MyContext.Provider value={/* some value */}>
-      <ChildComponent />
-    </MyContext.Provider>
-  );
-}
-function ChildComponent() {
-  const contextValue = useContext(MyContext);
-  return <div>{contextValue}</div>;
-}
-Example: Managing Theme in a Todo App
+Wrap your component tree with a Context.Provider
 
+Access the context value using useContext(SomeContext)
 
-import React, { useState, createContext, useContext } from 'react';
-const ThemeContext = createContext(); // Create a context
+Example: Theme Switching with Context
+
+import React, { useState, createContext, useContext } from 'react'
+
+const ThemeContext = createContext()
+
 function Root() {
-  const [theme, setTheme] = useState('light'); // Theme state
+  const [theme, setTheme] = useState('light')
+
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       <ThemeSwitcher />
       <TodoList />
     </ThemeContext.Provider>
-  );
+  )
 }
-export default Root;
-ThemeSwitcher Component
-
 
 function ThemeSwitcher() {
-  const { theme, setTheme } = useContext(ThemeContext); // Access context
+  const { theme, setTheme } = useContext(ThemeContext)
+
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  };
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
+  }
+
   return (
     <div>
-      <button onClick={toggleTheme}>
+      <button type="button" onClick={toggleTheme}>
         Switch to {theme === 'light' ? 'Dark' : 'Light'} Theme
       </button>
     </div>
-  );
+  )
 }
-export default ThemeSwitcher;
-TodoList Component
-
 
 function TodoList() {
-  const { theme } = useContext(ThemeContext); // Access current theme
+  const { theme } = useContext(ThemeContext)
+
   const listStyle =
     theme === 'light'
       ? { backgroundColor: '#fff', color: '#000' }
-      : { backgroundColor: '#333', color: '#fff' };
+      : { backgroundColor: '#333', color: '#fff' }
+
   return (
     <div style={listStyle}>
       <h2>Todo List</h2>
-      {/* Task list goes here */}
     </div>
-  );
+  )
 }
-export default TodoList;
-✅ Summary
-useContext is used to access shared state without prop drilling.
 
-It works with Context.Provider to make values available to all child components.
+export default Root
 
-In this example, we used it to manage and toggle the theme of the Todo List UI.
+✅ useContext is used here to share and update the theme across components without prop drilling.
 
-4. useRef: Accessing DOM Elements or Persisting Values Without Re-rendering
+4. useRef: Accessing DOM Elements or Persistent Values
+
+Goal
+
+Use useRef to reference a DOM element (e.g., an input field) and persist values across renders without triggering re-renders.
+
 Overview
-useRef is a Hook that allows you to:
 
-Access and interact with DOM elements directly.
+useRef serves two main purposes:
 
-Store mutable values that persist across renders without triggering a re-render.
+Accessing DOM nodes (like document.querySelector)
 
-This makes it ideal for tasks like focusing an input field, storing timers, or keeping track of previous values.
+Storing mutable values that persist across renders but don’t cause re-renders when updated
 
-Syntax 
+Unlike useState, updating a ref does not trigger a component re-render.
 
+Example: Auto-Focus and Clear Input Field
 
-const refContainer = useRef(initialValue);
-refContainer.current holds the mutable value or DOM reference.
+import React, { useState, useRef } from 'react'
 
-Updating refContainer.current does not cause a re-render.
-
-Example: Add Tasks with Input Ref
-
-
-import React, { useState, useRef } from 'react';
 function TodoList() {
-  const [tasks, setTasks] = useState([]);
-  const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input element
+  const [tasks, setTasks] = useState([])
+  const inputRef = useRef(null)
+
   const addTask = () => {
-    if (!inputRef?.current?.value) return;
+    const inputValue = inputRef.current?.value
+    if (!inputValue) return
     setTasks([
       ...tasks,
-      {
-        id: Math.floor(Math.random() * 100),
-        title: inputRef.current.value,
-        completed: false,
-      },
-    ]);
-    inputRef.current.value = ''; // Clear input after adding
-  };
+      { id: Math.floor(Math.random() * 100), title: inputValue, completed: false }
+    ])
+
+    inputRef.current.value = ''
+  }
+
   return (
     <div>
       <h2>Todo List</h2>
@@ -305,49 +314,136 @@ function TodoList() {
         ))}
       </ul>
     </div>
-  );
+  )
 }
-export default TodoList;
-✅ Summary
-useRef is perfect for accessing DOM elements like input fields.
 
-Unlike useState, updating a ref does not trigger a re-render.
+export default TodoList
 
-In this example, we used useRef to:
 
-Read the input value without binding it to state.
+✅ useRef is used here to directly access the input element, allowing us to read and reset its value without re-rendering the component.
 
-Clear the input field after adding a task.
+Example: 
+
+Storing mutable values that persist across renders but don’t cause re-renders when updated
+
+import React, { useRef, useEffect } from 'react';
+
+function TimerComponent() {
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      console.log('Tick');
+    }, 1000);
+
+    return () => {
+      clearInterval(timerRef.current); // clear interval
+      console.log('Timer cleared');
+    };
+  }, []);
+
+  return <div>interval</div>;
+}
+
+✅ Using useRef to store timer IDs (like those from setTimeout or setInterval) is mainly to avoid unnecessary re-renders and to ensure the value remains accessible throughout the component's lifecycle.
 
 5. useMemo: Optimize Expensive Calculations
+
 Goal
-Use useMemo to optimize performance by memoizing expensive computations—like filtering a list—so they only re-run when necessary.
+
+Use useMemo to avoid unnecessary recalculations—especially when dealing with derived data like filtered lists.
 
 Overview
-useMemo returns a memoized value. It recalculates the result only when one of its dependencies changes. This is useful when you want to avoid recalculating derived data on every render.
+
+useMemo lets you memoize the result of a computation. It only recalculates the value when one of its dependencies changes.
+
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b])
 
 
-
-const memoizedValue = useMemo(() => computeSomething(data), [data])
 Example: Memoizing Incomplete Todos
 
-
 import React, { useState, useMemo } from 'react'
+
 function TodoApp() {
-  const [todos, setTodos] = useState([])
-  const [newTodo, setNewTodo] = useState('')
-  const incompleteTodos = useMemo(() => {
-    return todos.filter(todo => !todo.completed)
-  }, [todos])
-  const addTodo = () => {
-    setTodos([...todos, { text: newTodo, completed: false }])
-    setNewTodo('')
+    
+  const { theme } = useContext(ThemeContext) 
+  const listStyle = theme === 'light' ? { backgroundColor: '#fff', color: '#000' } : { backgroundColor: '#333', color: '#fff' }
+  
+  const toggleCompletion = (index: number) => {
+    const updatedTodos = [...tasks]
+    updatedTodos[index].completed = !updatedTodos[index].completed
+    setTasks(updatedTodos)
   }
-  const toggleCompletion = (index) => {
+
+  // change theme will re-calc
+  const completedTasks =  tasks.filter(task => task.completed)
+  const completedTasks = () => {
+    console.info('re-calc')
+    return tasks.filter(task => task.completed)
+  }
+  
+  //Switching themes will not recalculate
+  const completedTasks = useMemo(() => {
+    console.info('re-calc')
+    return tasks.filter(task => task.completed)
+  }, [tasks])
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={newTodo}
+        onChange={(e) => setNewTodo(e.target.value)}
+      />
+      <button onClick={addTodo}>Add Todo</button>
+      <ul>
+        {incompleteTodos.map((todo, index) => (
+          <li key={index} onClick={() => toggleCompletion(index)}>
+            {todo.text} {todo.completed ? '✓' : ''}
+          </li>
+        ))}
+      </ul>
+      <p>
+        已完成任务数量：
+        {completedTasks.length}
+        {completedTasks().length}
+      </p>
+    </div>
+  )
+}
+
+export default TodoApp
+
+
+✅ useMemo ensures the filtered list of incomplete todos is only recalculated when the todos array changes.
+
+6. useCallback: Memoize Functions to Prevent Re-Creation
+
+Goal
+
+Use useCallback to memoize functions so they aren’t recreated on every render—especially useful when passing callbacks to child components.
+
+Overview
+
+useCallback returns a memoized version of a callback function. It only changes if one of its dependencies changes. This helps avoid unnecessary re-renders in child components that rely on reference equality.
+
+const memoizedCallback = useCallback(() => {
+  doSomething()
+}, [dependency])
+
+Example: Memoizing a Toggle Handler
+
+
+import React, { useState, useMemo, useCallback } from 'react'
+
+function TodoApp() {
+
+  const toggleCompletion = useCallback((index) => {
     const updated = [...todos]
     updated[index].completed = !updated[index].completed
     setTodos(updated)
-  }
+  }, [todos])
+
   return (
     <div>
       <input
@@ -366,80 +462,97 @@ function TodoApp() {
     </div>
   )
 }
+
 export default TodoApp
-✅ useMemo ensures the filtered list of incomplete todos is only recalculated when the todos array changes, improving performance in large lists.
-
-6. useCallback: Memoize Functions to Prevent Re-Creation
-Goal
-Use useCallback to memoize functions so they aren’t recreated on every render—especially useful when passing callbacks to child components.
-
-Overview
-useCallback returns a memoized version of a callback function. It only changes if one of its dependencies changes.
 
 
 
-const memoizedCallback = useCallback(() => {
-  doSomething(a, b)
-}, [a, b])
-Example: Memoizing a Toggle Handler
-
-
-const memoizedCallback = useCallback(() => {
-  doSomething(a, b)
-}, [a, b])
-✅ useCallback ensures toggleCompletion is only recreated when todos changes, which can help avoid unnecessary re-renders in child components.
+✅ useCallback ensures toggleCompletion is only recreated when todos changes, improving performance when passed to memoized child components.
 
 7. memo: Prevent Unnecessary Component Re-Renders
+
 Goal
-Use React.memo to optimize functional components by preventing re-renders when props haven’t changed.
+
+Use React.memo to prevent re-rendering of function components when their props haven’t changed.
 
 Overview
-memo is a higher-order component that wraps a function component and memoizes its output. It only re-renders the component if its props change.
 
+React.memo is a higher-order component that wraps a function component and memoizes its rendered output. If the component receives the same props as the previous render, React skips rendering and reuses the last rendered result.
 
+This is especially useful for optimizing performance in components that:
+
+Render frequently
+
+Receive the same props repeatedly
+
+Are part of a large list or complex UI
 
 const MemoizedComponent = React.memo(MyComponent)
+
 Example: Memoizing a Task Item Component
 
+interface IProps {
+  toggleCompletion: (task: IItem) => void
+  task: IItem
+}
 
-import React, { memo } from 'react';
-const TaskItem = memo(({ task }) => {
-  console.log('Rendering TaskItem');
-  return <li>{task}</li>;
-});
+// Memoized task item component
+const TaskItem = memo((props: IProps) => {
+  const { task, toggleCompletion } = props
+  console.log('Rendering TaskItem')
+  return (
+    <li key={task.id} className={task.completed ? styles.completed : ''} onClick={() => toggleCompletion(task)}>
+      {task.id}
+      :
+      {task.title}
+    </li>
+  )
+})
+
+export default TaskItem
+
 function TodoList() {
-  const [tasks, setTasks] = useState(['任务1', '任务2']);
-  const [newTask, setNewTask] = useState('');
+  const [tasks, setTasks] = useState(['Task 1', 'Task 2'])
+  const [newTask, setNewTask] = useState('')
+
   const addTask = () => {
-    setTasks([...tasks, newTask]);
-    setNewTask('');
-  };
+    setTasks([...tasks, newTask])
+    setNewTask('')
+  }
+  
+  const toggleCompletion = useCallback((task: IItem) => {
+    setTasks(prev =>
+      prev.map(t =>
+        t.id === task.id ? { ...t, completed: !t.completed } : t,
+      ),
+    )
+  }, [])
+
   return (
     <div>
-      <h2>Todo List</h2>
-      <input
-        type="text"
-        value={newTask}
-        onChange={(e) => setNewTask(e.target.value)}
-        placeholder="输入新任务"
-      />
-      <button onClick={addTask}>添加任务</button>
+      <h2>Todo List (reducer)</h2>
+      <input ref={inputRef} type="text" placeholder="输入新任务" />
+      <button type="button" onClick={() => addTask()}>添加任务</button>
       <ul>
         {tasks.map((task, index) => (
-          <TaskItem key={index} task={task} />
+          <TaskItem key={index} task={task} toggleCompletion={toggleCompletion} />
         ))}
       </ul>
     </div>
-  );
+  )
 }
-export default TodoList;
-✅ React.memo prevents TaskItem from re-rendering unless its task prop changes, which is especially useful in lists or performance-sensitive UIs.
+export default TodoList
+
+✅ React.memo ensures that TaskItem only re-renders when its task prop changes. This can significantly improve performance in lists or UIs with many child components.
 
 8. useReducer: Manage Complex State Logic
+
 Goal
+
 Use useReducer to manage more complex state transitions—such as toggling task completion or handling multiple action types—in a predictable and scalable way.
 
 Overview
+
 useReducer is an alternative to useState for managing state. It’s especially useful when:
 
 The state logic is complex (e.g. involves multiple sub-values or actions)
@@ -448,25 +561,21 @@ The next state depends on the previous one
 
 You want to centralize state updates in a single function (the reducer)
 
-
-
 const [state, dispatch] = useReducer(reducer, initialState)
+
 reducer is a pure function that takes the current state and an action, and returns the new state.
 
 dispatch is used to send actions to the reducer.
 
-Example: Managing a Todo List with useReducer
+Example: Managing Tasks with useReducer
 
+import React, { useState, useEffect, useReducer } from 'react';
 
-import React, { useReducer, useRef } from 'react'
-type IItem = {
-  id: number
-  title: string
-  completed: boolean
-}
 type Action =
-  | { type: 'ADD_TASK'; payload: IItem }
-  | { type: 'COMPLETE_TASK'; payload: IItem }
+  | { type: 'ADD_TASK', payload: IItem }
+  | { type: 'COMPLETE_TASK', payload: IItem }
+
+// Reducer 函数
 function taskReducer(state: IItem[], action: Action): IItem[] {
   switch (action.type) {
     case 'ADD_TASK':
@@ -477,99 +586,106 @@ function taskReducer(state: IItem[], action: Action): IItem[] {
           ? { ...task, completed: !task.completed }
           : task
       )
+
     default:
       return state
   }
 }
+
 function TodoListReducer() {
   const [tasks, dispatch] = useReducer(taskReducer, [])
+
   const inputRef = useRef<HTMLInputElement>(null)
+
   const addTask = () => {
-    const inputValue = inputRef.current?.value
-    if (!inputValue) return
-    const newTask: IItem = {
-      id: Math.floor(Math.random() * 100),
-      title: inputValue,
-      completed: false
+    if (!inputRef?.current?.value) {
+      return
     }
+    const newTask = { id: Math.floor(Math.random() * 100), title: inputRef?.current?.value, completed: false }
     dispatch({ type: 'ADD_TASK', payload: newTask })
     inputRef.current.value = ''
   }
+
   const toggleCompletion = (task: IItem) => {
     dispatch({ type: 'COMPLETE_TASK', payload: task })
   }
+
   return (
     <div>
-      <h2>Todo List (Reducer)</h2>
-      <input ref={inputRef} type="text" placeholder="Enter a new task" />
-      <button type="button" onClick={addTask}>Add Task</button>
+      <h2>Todo List (reducer)</h2>
+      <input ref={inputRef} type="text" placeholder="输入新任务" />
+      <button type="button" onClick={() => addTask()}>添加任务</button>
       <ul>
         {tasks.map((task, index) => (
-          <li
-            key={index}
-            onClick={() => toggleCompletion(task)}
-            style={{
-              textDecoration: task.completed ? 'line-through' : 'none',
-              cursor: 'pointer'
-            }}
-          >
-            {task.id}: {task.title}
+          <li key={index} className={task.completed ? styles.completed : ''} onClick={() => toggleCompletion(task)}>
+            {task.id}
+            :
+            {task.title}
           </li>
         ))}
       </ul>
     </div>
   )
 }
+
 export default TodoListReducer
+
+
 ✅ useReducer helps you manage task state updates in a centralized and predictable way. Actions like adding or toggling tasks are dispatched to the reducer, which handles the logic for updating the state.
 
+
+
 Using and Abstracting Fetch Requests in React
+
 1. What is the Fetch API?
-The Fetch API is a modern browser interface for making HTTP requests. It returns a Promise, which makes it easy to work with using .then() or async/await.
 
-Key characteristics:
+The Fetch API is a modern browser interface for making HTTP requests. It returns a Promise, allowing you to handle asynchronous operations using .then() or async/await.
 
-Promise-based: Enables clean, chainable async code.
+Key Characteristics:
 
-No cookies by default: You need to explicitly set credentials: 'include' if needed.
+Promise-based: Enables clean, chainable asynchronous code.
 
-Doesn’t reject on HTTP errors: You must manually check response.ok.
+No cookies by default: You must explicitly set credentials: 'include' to send cookies.
 
-Manual parsing: You need to call response.json() or similar to extract data.
+No automatic rejection on HTTP errors: Fetch only rejects on network failures. You must manually check response.ok.
+
+Manual parsing: You need to explicitly call response.json() or response.text() to parse the response body.
 
 2. Basic Usage
-GET Request
 
+GET Request
 
 fetch('https://api.example.com/data')
   .then(response => response.json())
   .then(data => console.log(data))
-  .catch(error => console.error('Fetch failed:', error));
-POST Request
+  .catch(error => console.error('Fetch failed:', error))
 
+POST Request
 
 fetch('https://api.example.com/data', {
   method: 'POST',
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   },
-  body: JSON.stringify({ key: 'value' }),
+  body: JSON.stringify({ key: 'value' })
 })
   .then(response => response.json())
   .then(data => console.log(data))
-  .catch(error => console.error('Fetch failed:', error));
-3. Headers and Body
-Setting Headers
+  .catch(error => console.error('Fetch failed:', error))
 
+3. Headers and Body
+
+Setting Request Headers
 
 fetch('https://api.example.com/data', {
   headers: {
     'Authorization': 'Bearer token',
-    'Content-Type': 'application/json',
-  },
-});
-Sending JSON in the Request Body
+    'Content-Type': 'application/json'
+  }
+})
 
+
+Sending JSON Body
 
 fetch('https://api.example.com/submit', {
   method: 'POST',
@@ -578,10 +694,11 @@ fetch('https://api.example.com/submit', {
   },
   body: JSON.stringify({ name: 'John', age: 30 }),
 });
+
+
 4. Handling Responses
-Use .json(), .text(), etc., to parse the response body. Always check response.ok to catch HTTP errors.
 
-
+Use .json(), .text(), etc., to parse the response. Always check response.ok to catch HTTP errors:
 
 fetch('https://api.example.com/data')
   .then(response => {
@@ -592,16 +709,16 @@ fetch('https://api.example.com/data')
   })
   .then(data => console.log(data))
   .catch(error => console.error('Fetch error:', error));
+
 5. Error Handling
+
 Fetch only rejects on network-level failures (e.g., no internet). HTTP errors like 404 or 500 won’t trigger .catch() unless you throw manually.
 
 Best practices:
 
 Always check response.ok.
 
-Use .catch() to handle network or parsing errors.
-
-
+Use .catch() to handle unexpected errors.
 
 fetch('https://api.example.com/data')
   .then(response => {
@@ -613,12 +730,15 @@ fetch('https://api.example.com/data')
   .catch(error => {
     console.error('Error during fetch operation:', error);
   });
+
+
 6. Example: Using Fetch in a React Component
 
-
 import React, { useState, useEffect, useReducer, useRef } from 'react';
+
 function TodoListFetch() {
   const [tasks, dispatch] = useReducer(taskReducer, []);
+
   // Fetch tasks on component mount
   useEffect(() => {
     fetch('https://jsonplaceholder.typicode.com/todos?_limit=10')
@@ -628,24 +748,30 @@ function TodoListFetch() {
       })
       .catch(error => console.error('Error fetching todos:', error));
   }, []);
+
   const inputRef = useRef<HTMLInputElement>(null);
+
   const addTask = () => {
     if (!inputRef?.current?.value) return;
+
     const newTask = {
       id: Math.floor(Math.random() * 100),
       title: inputRef.current.value,
       completed: false,
     };
+
     dispatch({ type: 'ADD_TASK', payload: newTask });
     inputRef.current.value = '';
   };
+
   const toggleCompletion = (task: IItem) => {
     dispatch({ type: 'COMPLETE_TASK', payload: task });
   };
+
   return (
     <div>
       <h2>Todo List (useReducer)</h2>
-      <input ref={inputRef} type="text" placeholder="Enter a new task" />
+      <input ref={inputRef} type="text" placeholder="Enter new task" />
       <button onClick={addTask}>Add Task</button>
       <ul>
         {tasks.map((task, index) => (
@@ -661,21 +787,116 @@ function TodoListFetch() {
     </div>
   );
 }
-export default TodoListFetch;
-✅ Final Thoughts
-At this point, we've successfully built a complete Todo List application using:
-此时，我们已经使用以下方法成功构建了一个完整的 Todo List 应用程序：
 
-Core React hooks like useState, useEffect, useReducer, and useRef 核心 React 钩子，如 useState、useEffect、useReducer 和 useRef
+export default TodoListFetch;
+
+Abstracting Fetch Requests in Real-World React Projects
+
+In real-world applications, it's common to make multiple HTTP requests throughout your app. To avoid repeating boilerplate code—like setting headers, handling errors, and parsing responses—you can encapsulate fetch logic into a reusable utility function.
+
+✅ Basic Example: fetchWithToken
+
+const fetchWithToken = async (url, options = {}) => {
+  const token = localStorage.getItem('token'); // Assume token is stored in localStorage
+
+  if (!token) {
+    throw new Error('No token available.');
+  }
+
+  // Default headers
+  const defaultHeaders = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  // Merge custom headers
+  const headers = {
+    ...defaultHeaders,
+    ...options.headers,
+  };
+
+  // Build fetch options
+  const fetchOptions = {
+    method: options.method || 'GET',
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  };
+
+  try {
+    const response = await fetch(url, fetchOptions);
+
+    // Handle HTTP errors
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token expired or unauthorized
+        throw new Error('Token expired. Please log in again.');
+      }
+      throw new Error(`Request failed with status: ${response.status}`);
+    }
+
+    // Parse response based on content type
+    const contentType = response.headers.get('Content-Type');
+
+    if (contentType?.includes('application/json')) {
+      return await response.json();
+    }
+
+    if (contentType?.includes('application/octet-stream')) {
+      return await response.blob();
+    }
+
+    return await response.text();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error; // Re-throw for caller to handle
+  }
+};
+
+📦 Usage Example
+
+const fetchData = async () => {
+  try {
+    const data = await fetchWithToken('https://api.example.com/data', {
+      method: 'GET',
+      headers: {
+        'Custom-Header': 'custom-value',
+      },
+    });
+
+    console.log(data);
+  } catch (error) {
+    console.error('Request failed:', error);
+  }
+};
+
+fetchData();
+
+
+🧠 Summary
+
+By abstracting fetch into a utility like fetchWithToken, you:
+
+Centralize token handling and error logic
+
+Avoid repeating headers and response parsing
+
+Make your components cleaner and easier to maintain
+
+✅ Final Thoughts
+
+At this point, we've successfully built a complete Todo List application using:
+
+Core React hooks like useState, useEffect, useReducer, and useRef
 
 The native Fetch API for making HTTP requests
-nativeFetch API，用于发出 HTTP 请求
 
-A custom fetchWithToken utility to abstract and streamline API calls
-一个 customfetchWithToken工具，用于抽象和简化 API 调用
+Here are some useful reference links for the React training course:
 
-This approach not only keeps your components clean and focused on UI logic, but also promotes code reuse, error consistency, and better separation of concerns.
-这种方法不仅可以保持组件干净并专注于 UI 逻辑，还可以促进代码重用、错误一致性和更好的关注点分离。
+React Hooks Documentation:
+https://react.dev/reference/react/hooks 
 
-By combining React's declarative UI model with a well-structured data-fetching strategy, you're now equipped to scale this pattern across larger applications.
-通过将 React 的声明式 UI 模型与结构良好的数据获取策略相结合，您现在有能力在更大的应用程序中扩展此模式。
+React Use (Collection of React Hooks):
+https://github.com/streamich/react-use 
+
+Fetch API (MDN Web Docs):
+https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API 
