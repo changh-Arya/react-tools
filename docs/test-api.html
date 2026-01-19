@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>State API Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh; 
+      padding: 20px;
+    }
+    .container { 
+      background: white; 
+      border-radius: 16px; 
+      padding: 24px; 
+      max-width: 400px; 
+      margin: 0 auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    h1 { color: #333; font-size: 20px; margin-bottom: 8px; text-align: center; }
+    .subtitle { color: #666; font-size: 14px; text-align: center; margin-bottom: 20px; }
+    .section { 
+      background: #f8f9fa; 
+      border-radius: 8px; 
+      padding: 16px; 
+      margin-bottom: 16px;
+    }
+    .section-title { font-weight: 600; color: #333; margin-bottom: 12px; font-size: 14px; }
+    .log-item { 
+      background: white; 
+      border: 1px solid #e0e0e0; 
+      border-radius: 6px; 
+      padding: 10px; 
+      margin-bottom: 8px; 
+      font-size: 12px;
+      word-break: break-all;
+      font-family: monospace;
+    }
+    .log-success { border-left: 3px solid #00a650; }
+    .log-error { border-left: 3px solid #dc3545; }
+    .log-info { border-left: 3px solid #17a2b8; }
+    .btn { 
+      width: 100%; 
+      padding: 14px; 
+      border: none; 
+      border-radius: 8px; 
+      font-size: 15px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #00a650; color: white; }
+    .btn-primary:active { background: #008c44; transform: scale(0.98); }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .status { 
+      text-align: center; 
+      padding: 12px; 
+      border-radius: 8px; 
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .status-waiting { background: #fff3cd; color: #856404; }
+    .status-loading { background: #cce5ff; color: #004085; }
+    .status-success { background: #d4edda; color: #155724; }
+    .status-error { background: #f8d7da; color: #721c24; }
+    .info { font-size: 12px; color: #666; margin-top: 16px; padding: 12px; background: #e9ecef; border-radius: 8px; }
+    .state-display { 
+      font-family: monospace; 
+      font-size: 18px; 
+      text-align: center;
+      color: #00a650;
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 State API Test</h1>
+    <p class="subtitle">测试 /generate/state API 和 Cookie 共享</p>
+    
+    <div id="status" class="status status-waiting">
+      等待开始测试...
+    </div>
+    
+    <div id="stateDisplay" class="state-display" style="display:none;">
+      State: <span id="stateValue">-</span>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📋 操作日志</div>
+      <div id="logs">
+        <div class="log-item log-info">页面已加载，等待操作...</div>
+      </div>
+    </div>
+    
+    <button id="btnGenerate" class="btn btn-primary" onclick="generateState()">
+      🔑 调用 /generate/state API
+    </button>
+    
+    <button id="btnCallback" class="btn btn-warning" onclick="callbackToApp()" disabled>
+      📱 返回 App (携带 State)
+    </button>
+    
+    <button class="btn btn-info" onclick="autoFlow()">
+      🚀 自动完成流程 (生成 + 回调)
+    </button>
+    
+    <button class="btn btn-secondary" onclick="clearLogs()">
+      🗑️ 清除日志
+    </button>
+    
+    <div class="info">
+      <strong>测试流程:</strong><br>
+      1. 点击"调用 /generate/state API"获取 state<br>
+      2. 后端会设置 session cookie<br>
+      3. 点击"返回 App"携带 state<br>
+      4. App 调用 /valid/state 验证 cookie<br>
+      5. 如果验证成功，说明 Cookie 共享正常 ✅
+    </div>
+  </div>
+
+  <script>
+    // API 配置
+    const API_BASE = 'https://api.hkuat.manulife.com.hk/ext/hk-ado-root-web-app-env4';
+    const GENERATE_STATE_URL = `${API_BASE}/generate/state`;
+    
+    // 解析 URL 参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const callbackScheme = urlParams.get('callbackScheme') || 'com.manulife.hk.uat.sam4';
+    
+    // 存储生成的 state
+    let currentState = null;
+    
+    // 日志工具
+    function log(message, type = 'info') {
+      const logsDiv = document.getElementById('logs');
+      const time = new Date().toLocaleTimeString();
+      const logClass = type === 'error' ? 'log-error' : (type === 'success' ? 'log-success' : 'log-info');
+      const icon = type === 'error' ? '❌' : (type === 'success' ? '✅' : 'ℹ️');
+      
+      logsDiv.innerHTML = `
+        <div class="log-item ${logClass}">
+          <strong>[${time}] ${icon}</strong> ${message}
+        </div>
+      ` + logsDiv.innerHTML;
+      
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+    
+    function setStatus(message, type) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.className = `status status-${type}`;
+      statusDiv.innerHTML = message;
+    }
+    
+    // 调用 /generate/state API
+    async function generateState() {
+      const btnGenerate = document.getElementById('btnGenerate');
+      const btnCallback = document.getElementById('btnCallback');
+      
+      btnGenerate.disabled = true;
+      setStatus('<span class="spinner"></span> 正在调用 API...', 'loading');
+      log(`调用 API: ${GENERATE_STATE_URL}`);
+      
+      try {
+        const response = await fetch(GENERATE_STATE_URL, {
+          method: 'GET',
+          credentials: 'include', // 重要：允许携带和接收 cookie
+          headers: {
+            'Accept': 'application/json, text/plain, */*'
+          }
+        });
+        
+        log(`HTTP 状态: ${response.status} ${response.statusText}`);
+        
+        // 记录响应头中的 cookie 信息
+        const setCookie = response.headers.get('Set-Cookie');
+        if (setCookie) {
+          log(`收到 Set-Cookie: ${setCookie}`, 'success');
+        }
+        
+        // 获取响应内容
+        const contentType = response.headers.get('Content-Type') || '';
+        let data;
+        
+        if (contentType.includes('application/json')) {
+          data = await response.json();
+          log(`JSON 响应: ${JSON.stringify(data)}`);
+        } else {
+          data = await response.text();
+          log(`文本响应: ${data}`);
+        }
+        
+        // 解析 state
+        // 响应可能是: "com.manulife.hk.uat.sam4:/?state=439b6bd2" 或 { callbackUrl: "..." } 或 { state: "..." }
+        if (typeof data === 'string') {
+          const match = data.match(/state=([^&]+)/);
+          if (match) {
+            currentState = decodeURIComponent(match[1]);
+          } else {
+            currentState = data;
+          }
+        } else if (typeof data === 'object') {
+          if (data.state) {
+            currentState = data.state;
+          } else if (data.callbackUrl) {
+            const match = data.callbackUrl.match(/state=([^&]+)/);
+            if (match) {
+              currentState = decodeURIComponent(match[1]);
+            }
+          }
+        }
+        
+        if (currentState) {
+          log(`提取到 State: ${currentState}`, 'success');
+          document.getElementById('stateDisplay').style.display = 'block';
+          document.getElementById('stateValue').textContent = currentState;
+          setStatus('✅ State 生成成功！Cookie 已设置', 'success');
+          btnCallback.disabled = false;
+        } else {
+          log('无法从响应中解析 state', 'error');
+          setStatus('⚠️ API 返回成功但无法解析 state', 'error');
+        }
+        
+      } catch (error) {
+        log(`API 调用失败: ${error.message}`, 'error');
+        setStatus(`❌ API 调用失败: ${error.message}`, 'error');
+        
+        // 检查是否是 CORS 问题
+        if (error.message.includes('Failed to fetch')) {
+          log('可能是 CORS 问题，请确保 API 允许跨域请求', 'error');
+        }
+      } finally {
+        btnGenerate.disabled = false;
+      }
+    }
+    
+    // 返回 App
+    function callbackToApp() {
+      if (!currentState) {
+        log('没有可用的 state，请先生成', 'error');
+        return;
+      }
+      
+      const callbackUrl = `${callbackScheme}:/?state=${encodeURIComponent(currentState)}&source=state_api_test`;
+      
+      log(`准备回调到 App: ${callbackUrl}`);
+      setStatus('📱 正在返回 App...', 'loading');
+      
+      // 跳转到 URL scheme
+      window.location.href = callbackUrl;
+    }
+    
+    // 自动完成流程
+    async function autoFlow() {
+      log('开始自动流程...', 'info');
+      
+      // 1. 生成 state
+      await generateState();
+      
+      // 2. 等待一下让用户看到结果
+      if (currentState) {
+        log('2秒后将自动返回 App...', 'info');
+        setTimeout(() => {
+          callbackToApp();
+        }, 2000);
+      }
+    }
+    
+    // 清除日志
+    function clearLogs() {
+      document.getElementById('logs').innerHTML = '<div class="log-item log-info">日志已清除</div>';
+      document.getElementById('stateDisplay').style.display = 'none';
+      document.getElementById('stateValue').textContent = '-';
+      document.getElementById('btnCallback').disabled = true;
+      currentState = null;
+      setStatus('等待开始测试...', 'waiting');
+    }
+    
+    // 页面加载
+    window.onload = async function() {
+      log(`页面已加载，Callback Scheme: ${callbackScheme}`);
+      log(`API URL: ${GENERATE_STATE_URL}`);
+      
+      // 检查当前 cookies
+      const cookies = document.cookie;
+      if (cookies) {
+        log(`当前页面 Cookies: ${cookies.substring(0, 100)}${cookies.length > 100 ? '...' : ''}`);
+      } else {
+        log('当前页面没有 cookies');
+      }
+      
+      // 检查是否是自动模式 (默认自动)
+      const autoMode = urlParams.get('auto') !== 'false';
+      
+      if (autoMode) {
+        log('🚀 自动模式启动，开始完整流程...', 'info');
+        setStatus('<span class="spinner"></span> 自动执行中...', 'loading');
+        
+        // 自动执行：生成 state -> 回调 App
+        await generateState();
+        
+        if (currentState) {
+          log('✅ State 生成成功，1秒后自动返回 App...', 'success');
+          setTimeout(() => {
+            callbackToApp();
+          }, 1000);
+        } else {
+          log('❌ 自动流程失败，请手动操作', 'error');
+          setStatus('❌ 自动流程失败，请手动操作', 'error');
+        }
+      } else {
+        log('手动模式，等待用户操作...', 'info');
+      }
+    };
+  </script>
+</body>
+</html>
