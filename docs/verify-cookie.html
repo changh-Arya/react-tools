@@ -3,137 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Step 2: Verify Cookie</title>
+  <title>Step 2: Validate State</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 20px;
-      max-width: 600px;
-      margin: 0 auto;
-      background: #f5f5f5;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 15px 0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h1 { color: #333; font-size: 20px; }
-    .result {
-      padding: 20px;
-      border-radius: 12px;
-      margin: 15px 0;
-      text-align: center;
-    }
-    .result.success { background: #d4edda; color: #155724; }
-    .result.error { background: #f8d7da; color: #721c24; }
-    .result.warning { background: #fff3cd; color: #856404; }
-    pre {
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 6px;
-      overflow-x: auto;
-      font-size: 11px;
-      text-align: left;
-      word-break: break-all;
-    }
-    .emoji { font-size: 48px; margin-bottom: 10px; }
-    .subtitle { font-size: 14px; margin-top: 10px; }
+    body { font-family: -apple-system, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f5f5f5; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
+    h1 { font-size: 20px; }
+    .result { padding: 30px; border-radius: 12px; margin: 15px 0; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .loading { background: #fff3cd; color: #856404; }
+    .emoji { font-size: 48px; }
+    pre { background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 11px; text-align: left; overflow-x: auto; }
   </style>
 </head>
 <body>
-  <h1>🔍 Step 2: Verify Cookie (Safari)</h1>
-  
-  <div class="card">
-    <p>这个页面在 <strong>Safari</strong> 中打开，用于验证是否能读取到步骤1 (ASWebAuthenticationSession) 设置的 cookie。</p>
-  </div>
+  <h1>Step 2: 调用 /valid/state</h1>
 
-  <div id="resultCard" class="result warning">
+  <div id="result" class="card result loading">
     <div class="emoji">⏳</div>
-    <div>正在检查 Cookie...</div>
+    <div>验证中...</div>
   </div>
 
   <div class="card">
-    <h3>Cookie 详情:</h3>
-    <pre id="details"></pre>
+    <pre id="log"></pre>
   </div>
 
   <script>
-    function getUrlParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
+    const state = new URLSearchParams(location.search).get('state');
+    const API = 'https://api.hkuat.manulife.com.hk/ext/hk-ado-root-web-app-env4/valid/state?state=' + encodeURIComponent(state || '');
+    
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
     }
 
-    // 从 URL 获取期望的 cookie 值
-    const expectedCookie = getUrlParam('expected');
-    
-    // 读取所有 cookie
-    const allCookies = document.cookie;
-    
-    // 解析 cookie
-    const cookieObj = {};
-    if (allCookies) {
-      allCookies.split(';').forEach(c => {
-        const parts = c.trim().split('=');
-        if (parts.length >= 2) {
-          cookieObj[parts[0]] = parts.slice(1).join('=');
+    async function validate() {
+      if (!state) {
+        document.getElementById('result').className = 'card result error';
+        document.getElementById('result').innerHTML = '<div class="emoji">❌</div><div>缺少 state 参数</div>';
+        return;
+      }
+      
+      log('State: ' + state);
+      log('API: ' + API);
+      
+      try {
+        const res = await fetch(API, { credentials: 'include' });
+        const text = await res.text();
+        log('Status: ' + res.status);
+        log('Response: ' + text);
+        
+        // 判断验证结果
+        const valid = res.ok && (text.includes('true') || text.includes('valid') || text.includes('success'));
+        
+        if (valid) {
+          document.getElementById('result').className = 'card result success';
+          document.getElementById('result').innerHTML = '<div class="emoji">✅</div><div><b>Cookie 共享成功!</b></div><div style="margin-top:10px">SSO 方案可行</div>';
+        } else {
+          document.getElementById('result').className = 'card result error';
+          document.getElementById('result').innerHTML = '<div class="emoji">❌</div><div><b>Cookie 共享失败</b></div><div style="margin-top:10px">' + text + '</div>';
         }
-      });
+      } catch (e) {
+        log('Error: ' + e.message);
+        document.getElementById('result').className = 'card result error';
+        document.getElementById('result').innerHTML = '<div class="emoji">❌</div><div><b>请求失败</b></div><div style="margin-top:10px">' + e.message + '</div>';
+      }
     }
     
-    // 查找测试 cookie
-    const foundCookie = cookieObj['sso_test_cookie'];
-    const isMatch = expectedCookie && foundCookie === expectedCookie;
-    
-    // 更新结果显示
-    const resultCard = document.getElementById('resultCard');
-    
-    if (isMatch) {
-      // 完全匹配 - 共享成功
-      resultCard.className = 'result success';
-      resultCard.innerHTML = `
-        <div class="emoji">✅</div>
-        <div><strong>Cookie 共享成功！</strong></div>
-        <div class="subtitle">
-          Safari 成功读取到 ASWebAuthenticationSession 设置的 Cookie<br><br>
-          <strong>这证明 SSO 方案可行！</strong>
-        </div>
-      `;
-    } else if (foundCookie) {
-      // 找到 cookie 但值不匹配 (可能是之前的测试)
-      resultCard.className = 'result warning';
-      resultCard.innerHTML = `
-        <div class="emoji">🍪</div>
-        <div><strong>找到 Cookie，但值不匹配</strong></div>
-        <div class="subtitle">
-          找到: ${foundCookie}<br>
-          期望: ${expectedCookie || '(未提供)'}<br><br>
-          可能是之前的测试遗留，请重新测试
-        </div>
-      `;
-    } else {
-      // 没有找到 cookie - 共享失败
-      resultCard.className = 'result error';
-      resultCard.innerHTML = `
-        <div class="emoji">❌</div>
-        <div><strong>Cookie 共享失败</strong></div>
-        <div class="subtitle">
-          Safari 无法读取到 ASWebAuthenticationSession 设置的 Cookie<br><br>
-          期望的 Cookie: ${expectedCookie || '(未提供)'}
-        </div>
-      `;
-    }
-    
-    // 显示详情
-    document.getElementById('details').textContent = JSON.stringify({
-      expected: expectedCookie || '(not provided)',
-      found: foundCookie || '(not found)',
-      match: isMatch,
-      allCookies: allCookies || '(no cookies)',
-      parsedCookies: cookieObj,
-      timestamp: new Date().toISOString()
-    }, null, 2);
+    validate();
   </script>
 </body>
 </html>
