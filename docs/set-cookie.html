@@ -3,129 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Step 1: Set Cookie</title>
+  <title>Step 1: Generate State</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 20px;
-      max-width: 600px;
-      margin: 0 auto;
-      background: #f5f5f5;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 15px 0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h1 { color: #333; font-size: 20px; }
+    body { font-family: -apple-system, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f5f5f5; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { font-size: 20px; }
     .status { padding: 15px; border-radius: 8px; margin: 10px 0; }
-    .status.success { background: #d4edda; color: #155724; }
-    .status.error { background: #f8d7da; color: #721c24; }
-    .status.info { background: #cce5ff; color: #004085; }
-    button {
-      background: #007aff;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 8px;
-      font-size: 16px;
-      width: 100%;
-      margin: 5px 0;
-    }
-    button:active { background: #0056b3; }
-    pre {
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 6px;
-      overflow-x: auto;
-      font-size: 12px;
-      word-break: break-all;
-    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .loading { background: #fff3cd; color: #856404; }
+    button { background: #007aff; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; width: 100%; margin: 5px 0; }
+    button:disabled { background: #ccc; }
+    pre { background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto; }
   </style>
 </head>
 <body>
-  <h1>🍪 Step 1: Set Cookie (前端设置)</h1>
+  <h1>Step 1: 调用 /generate/state</h1>
   
   <div class="card">
-    <p><strong>这个页面不需要后端 API！</strong></p>
-    <p>纯前端 JavaScript 设置 cookie，用于测试 ASWebAuthenticationSession 与 Safari 的 cookie 共享。</p>
+    <div id="status" class="status">点击按钮调用 API</div>
+    <pre id="log"></pre>
   </div>
 
   <div class="card">
-    <div id="status" class="status info">Ready to set cookie...</div>
-    <pre id="details"></pre>
-  </div>
-
-  <div class="card">
-    <button onclick="setCookieAndCallback()">🍪 设置 Cookie 并返回 App</button>
+    <button id="btn" onclick="callAPI()">调用 API 生成 State</button>
   </div>
 
   <script>
-    function getUrlParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
+    const API = 'https://api.hkuat.manulife.com.hk/ext/hk-ado-root-web-app-env4/generate/state';
+    const scheme = new URLSearchParams(location.search).get('callbackScheme') || 'com.manulife.hk.uat.sam4';
+    
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
     }
 
-    const callbackScheme = getUrlParam('callbackScheme') || 'com.manulife.hk.uat.sam4';
-    
-    // 生成唯一的 cookie 值
-    const cookieValue = 'test_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    
-    function updateStatus(message, type) {
-      document.getElementById('status').textContent = message;
-      document.getElementById('status').className = 'status ' + type;
-    }
-    
-    function updateDetails(obj) {
-      document.getElementById('details').textContent = JSON.stringify(obj, null, 2);
-    }
-
-    function setCookieAndCallback() {
+    async function callAPI() {
+      document.getElementById('btn').disabled = true;
+      document.getElementById('status').className = 'status loading';
+      document.getElementById('status').textContent = '调用 API 中...';
+      document.getElementById('log').textContent = '';
+      
       try {
-        updateStatus('Setting cookie...', 'info');
+        log('GET ' + API);
+        const res = await fetch(API, { credentials: 'include' });
+        const text = await res.text();
+        log('Response: ' + text);
         
-        // 设置 cookie (5 分钟过期)
-        const expiry = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
-        const cookieString = `sso_test_cookie=${cookieValue}; expires=${expiry}; path=/`;
-        document.cookie = cookieString;
+        // 解析 state
+        const match = text.match(/state=([^&\s]+)/);
+        const state = match ? match[1] : '';
         
-        // 验证 cookie 是否设置成功
-        const allCookies = document.cookie;
-        const cookieSet = allCookies.includes('sso_test_cookie=' + cookieValue);
-        
-        updateDetails({
-          action: 'setCookie',
-          cookieValue: cookieValue,
-          verified: cookieSet,
-          allCookies: allCookies || '(none)'
-        });
-        
-        if (!cookieSet) {
-          updateStatus('⚠️ Cookie 可能未设置成功', 'error');
+        if (state) {
+          document.getElementById('status').className = 'status success';
+          document.getElementById('status').textContent = '✅ State: ' + state;
+          log('Callback: ' + scheme + ':/?state=' + state);
+          setTimeout(() => { location.href = scheme + ':/?state=' + state; }, 500);
         } else {
-          updateStatus('✅ Cookie 设置成功! 即将返回 App...', 'success');
+          throw new Error('无法解析 state');
         }
-        
-        // 回调到 App，传递 cookie 值
-        const callbackUrl = `${callbackScheme}:/?state=${encodeURIComponent(cookieValue)}`;
-        
-        setTimeout(() => {
-          window.location.href = callbackUrl;
-        }, 800);
-        
-      } catch (error) {
-        updateStatus('Error: ' + error.message, 'error');
+      } catch (e) {
+        document.getElementById('status').className = 'status error';
+        document.getElementById('status').textContent = '❌ ' + e.message;
+        log('Error: ' + e.message);
+        document.getElementById('btn').disabled = false;
       }
     }
-
-    // 显示初始状态
-    updateDetails({
-      callbackScheme: callbackScheme,
-      cookieToSet: cookieValue,
-      existingCookies: document.cookie || '(none)'
-    });
+    
+    log('API: ' + API);
+    log('Scheme: ' + scheme);
   </script>
 </body>
 </html>
