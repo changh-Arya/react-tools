@@ -125,6 +125,10 @@
       📱 返回 App (携带 State)
     </button>
     
+    <button class="btn btn-secondary" onclick="forceCallback()">
+      🔙 强制返回 App (无论成功失败)
+    </button>
+    
     <button class="btn btn-info" onclick="autoFlow()">
       🚀 自动完成流程 (生成 + 回调)
     </button>
@@ -269,6 +273,20 @@
       const callbackUrl = `${callbackScheme}:/?state=${encodeURIComponent(currentState)}&source=state_api_test`;
       
       log(`准备回调到 App: ${callbackUrl}`);
+      setStatus('📱 正在返回 App...', 'loading');
+      
+      // 跳转到 URL scheme
+      window.location.href = callbackUrl;
+    }
+    
+    // 强制返回 App (无论是否有 state)
+    function forceCallback() {
+      const stateToUse = currentState || 'test_' + Date.now();
+      const status = currentState ? 'success' : 'no_state';
+      
+      const callbackUrl = `${callbackScheme}:/?state=${encodeURIComponent(stateToUse)}&source=force_callback&status=${status}`;
+      
+      log(`强制回调到 App: ${callbackUrl}`);
       setStatus('📱 正在返回 App...', 'loading');
       
       // 跳转到 URL scheme
